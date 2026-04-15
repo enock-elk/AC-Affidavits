@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Actuary Consulting | Command Center</title>
+    
+    <!-- Custom SVG Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='bg-grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%231e293b' /%3E%3Cstop offset='100%25' stop-color='%23020617' /%3E%3C/linearGradient%3E%3ClinearGradient id='amber-grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23fbbf24' /%3E%3Cstop offset='100%25' stop-color='%23d97706' /%3E%3C/linearGradient%3E%3Cfilter id='shadow' x='-10%25' y='-10%25' width='120%25' height='120%25'%3E%3CfeDropShadow dx='0' dy='8' stdDeviation='12' flood-color='%23000000' flood-opacity='0.4'/%3E%3C/filter%3E%3C/defs%3E%3Crect x='32' y='32' width='448' height='448' rx='100' fill='url(%23bg-grad)' stroke='%23334155' stroke-width='4' /%3E%3Cpath d='M160 120 h140 l80 80 v192 a24 24 0 0 1 -24 24 H160 a24 24 0 0 1 -24 -24 V144 a24 24 0 0 1 24 -24 z' fill='%23ffffff' filter='url(%23shadow)' /%3E%3Cpath d='M300 120 v56 a24 24 0 0 0 24 24 h56 Z' fill='%23cbd5e1' /%3E%3Cpath d='M300 240 l-40 60 h30 l-10 50 50 -70 h-30 z' fill='url(%23amber-grad)' filter='url(%23shadow)'/%3E%3Crect x='180' y='200' width='80' height='12' rx='6' fill='%2394a3b8' /%3E%3Crect x='180' y='240' width='60' height='12' rx='6' fill='%2394a3b8' /%3E%3Crect x='180' y='280' width='70' height='12' rx='6' fill='%2394a3b8' /%3E%3Crect x='180' y='320' width='40' height='12' rx='6' fill='%2394a3b8' /%3E%3Ccircle cx='256' cy='360' r='12' fill='url(%23amber-grad)' /%3E%3Cpath d='M190 360 h132' stroke='url(%23amber-grad)' stroke-width='6' stroke-linecap='round' /%3E%3C/svg%3E">
+
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        amber: { 400: '#fbbf24', 500: '#f59e0b', 600: '#d97706' },
+                        slate: { 800: '#1e293b', 900: '#0f172a', 950: '#020617' }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* Professional Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* A4 Paper Simulation */
+        .a4-paper {
+            width: 100%;
+            max-width: 800px;
+            min-height: 1050px;
+            background-color: white;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            margin: 0 auto;
+            padding: 4rem;
+            font-family: "Arial", sans-serif;
+            color: #111827;
+        }
+        .dark .a4-paper {
+            background-color: #1e293b;
+            color: #cbd5e1;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.05);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 h-screen w-full overflow-hidden flex transition-colors duration-300">
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed top-6 left-1/2 transform -translate-x-1/2 bg-amber-500 text-slate-900 px-5 py-2.5 rounded-full shadow-lg flex items-center gap-2 z-50 font-bold transition-all duration-300 opacity-0 pointer-events-none translate-y-[-20px] text-sm">
+        <span id="toast-icon"></span>
+        <span id="toast-msg">Success!</span>
+    </div>
+
+    <!-- SIDEBAR (5%) -->
+    <div class="w-20 shrink-0 flex flex-col items-center py-6 border-r border-slate-200 dark:border-slate-800 bg-slate-900 dark:bg-slate-950 text-slate-400 z-20">
+        
+        <!-- Custom App Logo (SVG) -->
+        <div class="mb-8 hover:scale-105 transition-transform duration-300 cursor-pointer" title="Affidavit Automation">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="w-12 h-12 drop-shadow-xl">
+              <defs>
+                <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#1e293b" />
+                  <stop offset="100%" stop-color="#020617" />
+                </linearGradient>
+                <linearGradient id="amber-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#fbbf24" />
+                  <stop offset="100%" stop-color="#d97706" />
+                </linearGradient>
+                <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+                  <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.4"/>
+                </filter>
+              </defs>
+              <rect x="32" y="32" width="448" height="448" rx="100" fill="url(#bg-grad)" stroke="#334155" stroke-width="4" />
+              <path d="M160 120 h140 l80 80 v192 a24 24 0 0 1 -24 24 H160 a24 24 0 0 1 -24 -24 V144 a24 24 0 0 1 24 -24 z" fill="#ffffff" filter="url(#shadow)" />
+              <path d="M300 120 v56 a24 24 0 0 0 24 24 h56 Z" fill="#cbd5e1" />
+              <path d="M300 240 l-40 60 h30 l-10 50 50 -70 h-30 z" fill="url(#amber-grad)" filter="url(#shadow)"/>
+              <rect x="180" y="200" width="80" height="12" rx="6" fill="#94a3b8" />
+              <rect x="180" y="240" width="60" height="12" rx="6" fill="#94a3b8" />
+              <rect x="180" y="280" width="70" height="12" rx="6" fill="#94a3b8" />
+              <rect x="180" y="320" width="40" height="12" rx="6" fill="#94a3b8" />
+              <circle cx="256" cy="360" r="12" fill="url(#amber-grad)" />
+              <path d="M190 360 h132" stroke="url(#amber-grad)" stroke-width="6" stroke-linecap="round" />
+            </svg>
+        </div>
+        
+        <nav class="flex-1 flex flex-col gap-6">
+            <button class="p-3 text-white bg-slate-800 rounded-xl transition-all" title="Command Center"><i data-lucide="layout-dashboard"></i></button>
+            <button class="p-3 hover:text-white hover:bg-slate-800 rounded-xl transition-all" title="Attorney Database"><i data-lucide="users"></i></button>
+            <button class="p-3 hover:text-white hover:bg-slate-800 rounded-xl transition-all" title="Recent History"><i data-lucide="history"></i></button>
+            <button class="p-3 hover:text-white hover:bg-slate-800 rounded-xl transition-all" title="Settings"><i data-lucide="settings"></i></button>
+        </nav>
+
+        <button id="theme-toggle" class="p-3 hover:text-white hover:bg-slate-800 rounded-xl transition-all mt-auto mb-4" title="Toggle Dark Mode">
+            <i data-lucide="moon" id="theme-icon"></i>
+        </button>
+    </div>
+
+    <!-- COLUMN 1: SETUP & PROFILE (25%) -->
+    <div class="w-80 shrink-0 border-r border-slate-200 dark:border-slate-800 flex flex-col bg-white dark:bg-slate-800 z-10">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-700">
+            <h2 class="text-lg font-bold flex items-center gap-2 mb-1">
+                <i data-lucide="building-2" class="text-amber-500 w-5 h-5"></i> Attorney Profile
+            </h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Select firm to load template rules</p>
+        </div>
+        
+        <div class="p-6 flex-1 overflow-y-auto space-y-6">
+            <!-- Dropdown -->
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500 dark:text-slate-400">Instructing Firm</label>
+                <select id="attorney-select" disabled class="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm font-medium outline-none focus:ring-2 focus:ring-amber-500/20 text-slate-900 dark:text-white transition-all appearance-none cursor-pointer disabled:opacity-50">
+                    <option value="">Loading Database...</option>
+                </select>
+            </div>
+
+            <!-- Rules Badges -->
+            <div class="p-4 rounded-xl border border-slate-100 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900/50 space-y-3 relative">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Active Ruleset</span>
+                    <button id="btn-unlock" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-amber-500/10 hover:text-amber-500 transition-all flex items-center gap-1 cursor-pointer">
+                        <i data-lucide="lock" class="w-3 h-3" id="icon-lock"></i> <span id="text-lock">UNLOCK</span>
+                    </button>
+                </div>
+                
+                <div class="space-y-2">
+                    <button id="toggle-quals" class="w-full flex items-center justify-between p-2 rounded-lg text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 transition-all cursor-default">
+                        <span class="font-medium">Qualifications</span>
+                        <span id="badge-quals" class="text-xs font-bold px-2 py-1 rounded-md bg-slate-500/10 text-slate-500">--</span>
+                    </button>
+                    <button id="toggle-cover" class="w-full flex items-center justify-between p-2 rounded-lg text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 transition-all cursor-default">
+                        <span class="font-medium">Cover Page</span>
+                        <span id="badge-cover" class="text-xs font-bold px-2 py-1 rounded-md bg-slate-500/10 text-slate-500">--</span>
+                    </button>
+                    <button id="toggle-link" class="w-full flex items-center justify-between p-2 rounded-lg text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 transition-all cursor-default">
+                        <span class="font-medium">Link Number</span>
+                        <span id="badge-link" class="text-xs font-bold px-2 py-1 rounded-md bg-slate-500/10 text-slate-500">--</span>
+                    </button>
+                    <button id="toggle-obo" class="w-full flex items-center justify-between p-2 rounded-lg text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 transition-all cursor-default">
+                        <span class="font-medium">OBO (Multi)</span>
+                        <span id="badge-obo" class="text-xs font-bold px-2 py-1 rounded-md bg-slate-500/10 text-slate-500">--</span>
+                    </button>
+                </div>
+
+                <!-- Sync Button (Appears only when rules are changed) -->
+                <button id="btn-sync" class="hidden w-full mt-3 py-2 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 transition-all flex items-center justify-center gap-2 animate-pulse">
+                    <i data-lucide="cloud-upload" class="w-4 h-4"></i> Sync to Google Sheets
+                </button>
+            </div>
+
+            <!-- Actuarial Module -->
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500 dark:text-slate-400">Actuarial Module</label>
+                <div class="flex bg-slate-200 dark:bg-slate-900 rounded-xl p-1 relative">
+                    <button id="mod-simple" class="flex-1 py-2 text-sm font-bold rounded-lg transition-all bg-white dark:bg-slate-700 shadow-sm text-amber-600 dark:text-amber-400 z-10">Simple</button>
+                    <button id="mod-extensive" class="flex-1 py-2 text-sm font-bold rounded-lg transition-all text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 z-10">Extensive</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- COLUMN 2: DYNAMIC FORM (35%) -->
+    <div class="flex-[1.2] border-r border-slate-200 dark:border-slate-800 flex flex-col bg-white dark:bg-slate-800 z-10">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+            <div>
+                <h2 class="text-lg font-bold flex items-center gap-2 mb-1">
+                    <i data-lucide="file-signature" class="text-amber-500 w-5 h-5"></i> Case Details
+                </h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Inputs morph based on firm rules</p>
+            </div>
+            <span id="alert-link" class="hidden items-center gap-1 text-[10px] font-bold px-2 py-1 rounded bg-rose-500/10 text-rose-500 border border-rose-500/20">
+                <i data-lucide="alert-circle" class="w-3 h-3"></i> LINK NO. REQ
+            </span>
+        </div>
+
+        <div class="p-6 flex-1 overflow-y-auto space-y-6">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500 dark:text-slate-400">Court</label>
+                    <input type="text" id="in-court" value="High Court of South Africa" class="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm outline-none focus:border-amber-500 dark:text-white transition-all">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500 dark:text-slate-400">Division</label>
+                    <input type="text" id="in-div" value="Gauteng Division, Pretoria" class="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm outline-none focus:border-amber-500 dark:text-white transition-all">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500 dark:text-slate-400">Case Number</label>
+                <input type="text" id="in-case" placeholder="e.g. 1492/2018" class="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm font-bold outline-none focus:border-amber-500 dark:text-white transition-all">
+            </div>
+
+            <!-- Dynamic Link Fields -->
+            <div id="container-links" class="hidden grid-cols-2 gap-4 transition-all">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500 dark:text-slate-400">Claim No.</label>
+                    <input type="text" id="in-claim" class="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm outline-none focus:border-amber-500 dark:text-white transition-all">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500 dark:text-slate-400">Link No.</label>
+                    <input type="text" id="in-link" class="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm outline-none focus:border-amber-500 dark:text-white transition-all">
+                </div>
+            </div>
+
+            <!-- Parties -->
+            <div class="p-5 rounded-2xl border border-slate-100 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900/50">
+                <label class="block text-xs font-bold uppercase tracking-wider mb-3 text-slate-500 dark:text-slate-400">Parties (Plaintiff)</label>
+                <input type="text" id="in-plaintiff" placeholder="Main Claimant Name" class="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-bold outline-none focus:border-amber-500 dark:text-white transition-all mb-3">
+                
+                <!-- Dynamic OBO Area -->
+                <div id="container-obo" class="hidden flex-col gap-3">
+                    <div id="obo-list" class="flex flex-col gap-3"></div>
+                    <button id="btn-add-obo" class="flex items-center justify-center gap-2 text-xs font-bold px-4 py-3 rounded-xl border border-dashed border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 transition-all">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Add Dependent (OBO)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- COLUMN 3: WYSIWYG PREVIEW (40%) -->
+    <div class="flex-[1.5] flex flex-col relative bg-slate-200/60 dark:bg-[#0f172a]">
+        <!-- Toolbar -->
+        <div class="h-16 shrink-0 flex items-center justify-between px-6 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md z-10">
+            <div class="flex items-center gap-2">
+                <i data-lucide="refresh-cw" class="w-4 h-4 text-slate-400" id="render-spinner"></i>
+                <span class="text-xs font-bold tracking-wide uppercase text-slate-500 dark:text-slate-400" id="render-text">Live Render</span>
+            </div>
+            <div class="flex gap-3">
+                <button id="btn-copy" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all">
+                    <i data-lucide="copy" class="w-4 h-4"></i> Copy
+                </button>
+                <button id="btn-export" class="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold bg-amber-500 hover:bg-amber-600 text-slate-900 shadow-lg shadow-amber-500/20 transition-all">
+                    <i data-lucide="download" class="w-4 h-4"></i> Export Word
+                </button>
+            </div>
+        </div>
+
+        <!-- Paper Container -->
+        <div class="flex-1 overflow-y-auto p-8">
+            <div class="a4-paper">
+                <pre id="doc-preview" class="whitespace-pre-wrap text-[13px] leading-relaxed break-words"></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        lucide.createIcons();
+
+        // --- GOOGLE APPS SCRIPT URL ---
+        const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbw-M9kVkSSXKuJ49tohaconx99-l5VcbU1xSNeUTccX2gs0prok3LltyTyO7mdNKtm8/exec";
+
+        // APP STATE
+        let ATTORNEY_DATABASE = [];
+        const state = {
+            darkMode: false,
+            attorney: null,       
+            rules: null,          
+            isUnlocked: false,
+            complexity: 'simple',
+            dependents: [],
+            form: { court: 'High Court of South Africa', div: 'Gauteng Division, Pretoria', case: '', claim: '', link: '', plaintiff: '' }
+        };
+
+        // DOM ELEMENTS
+        const els = {
+            html: document.documentElement,
+            themeToggle: document.getElementById('theme-toggle'),
+            themeIcon: document.getElementById('theme-icon'),
+            attorneySelect: document.getElementById('attorney-select'),
+            btnUnlock: document.getElementById('btn-unlock'),
+            iconLock: document.getElementById('icon-lock'),
+            textLock: document.getElementById('text-lock'),
+            btnSync: document.getElementById('btn-sync'),
+            toggles: { quals: document.getElementById('toggle-quals'), cover: document.getElementById('toggle-cover'), link: document.getElementById('toggle-link'), obo: document.getElementById('toggle-obo') },
+            badges: { quals: document.getElementById('badge-quals'), cover: document.getElementById('badge-cover'), link: document.getElementById('badge-link'), obo: document.getElementById('badge-obo') },
+            mods: { simple: document.getElementById('mod-simple'), extensive: document.getElementById('mod-extensive') },
+            alertLink: document.getElementById('alert-link'),
+            containers: { links: document.getElementById('container-links'), obo: document.getElementById('container-obo') },
+            inputs: { court: document.getElementById('in-court'), div: document.getElementById('in-div'), case: document.getElementById('in-case'), claim: document.getElementById('in-claim'), link: document.getElementById('in-link'), plaintiff: document.getElementById('in-plaintiff') },
+            oboList: document.getElementById('obo-list'),
+            btnAddObo: document.getElementById('btn-add-obo'),
+            preview: document.getElementById('doc-preview'),
+            btnCopy: document.getElementById('btn-copy'),
+            btnExport: document.getElementById('btn-export'),
+            toast: document.getElementById('toast'),
+            toastMsg: document.getElementById('toast-msg'),
+            toastIcon: document.getElementById('toast-icon')
+        };
+
+        // --- INITIALIZATION & DB FETCH ---
+        async function init() {
+            bindEventListeners();
+            await fetchDatabase();
+        }
+
+        async function fetchDatabase() {
+            showToast("Syncing with Google Sheets...", "loader");
+            try {
+                const response = await fetch(GOOGLE_API_URL);
+                const data = await response.json();
+                
+                // Construct DB with a Custom override at the top
+                ATTORNEY_DATABASE = [
+                    { id: 'custom', firm: '-- Custom / Override --', attorney: '', rules: { quals: 'Long', linkNo: false, cover: false, obo: false } },
+                    ...data
+                ];
+
+                // Populate Dropdown
+                els.attorneySelect.innerHTML = '';
+                ATTORNEY_DATABASE.forEach(att => {
+                    const opt = document.createElement('option');
+                    opt.value = att.id;
+                    opt.textContent = att.attorney ? `${att.firm} (${att.attorney})` : att.firm;
+                    els.attorneySelect.appendChild(opt);
+                });
+
+                els.attorneySelect.disabled = false;
+                state.attorney = ATTORNEY_DATABASE[1] || ATTORNEY_DATABASE[0];
+                state.rules = { ...state.attorney.rules };
+                els.attorneySelect.value = state.attorney.id;
+                
+                updateUI();
+                showToast("Database loaded successfully!", "success");
+            } catch (error) {
+                console.error("Database fetch failed:", error);
+                els.attorneySelect.innerHTML = '<option>Failed to load database.</option>';
+                showToast("Connection to Google Sheets failed.", "error");
+            }
+        }
+
+        // --- EVENT LISTENERS ---
+        function bindEventListeners() {
+            els.themeToggle.addEventListener('click', toggleTheme);
+            els.attorneySelect.addEventListener('change', handleAttorneyChange);
+            
+            els.btnUnlock.addEventListener('click', toggleUnlock);
+            els.btnSync.addEventListener('click', syncToGoogleSheets);
+
+            els.mods.simple.addEventListener('click', () => { state.complexity = 'simple'; updateUI(); });
+            els.mods.extensive.addEventListener('click', () => { state.complexity = 'extensive'; updateUI(); });
+
+            Object.keys(els.inputs).forEach(key => {
+                els.inputs[key].addEventListener('input', (e) => { state.form[key] = e.target.value; renderPreview(); });
+            });
+
+            els.btnAddObo.addEventListener('click', () => { state.dependents.push(''); renderDependents(); renderPreview(); });
+
+            els.toggles.quals.addEventListener('click', () => toggleRule('quals', ['Long', 'Short']));
+            els.toggles.cover.addEventListener('click', () => toggleRule('cover', [true, false]));
+            els.toggles.link.addEventListener('click', () => toggleRule('link', [true, false]));
+            els.toggles.obo.addEventListener('click', () => toggleRule('obo', [true, false]));
+
+            els.btnCopy.addEventListener('click', copyToClipboard);
+            els.btnExport.addEventListener('click', exportToWord);
+        }
+
+        function toggleTheme() {
+            state.darkMode = !state.darkMode;
+            if (state.darkMode) {
+                els.html.classList.add('dark');
+                els.themeIcon.setAttribute('data-lucide', 'sun');
+            } else {
+                els.html.classList.remove('dark');
+                els.themeIcon.setAttribute('data-lucide', 'moon');
+            }
+            lucide.createIcons();
+        }
+
+        function handleAttorneyChange(e) {
+            state.attorney = ATTORNEY_DATABASE.find(a => a.id === e.target.value);
+            state.rules = { ...state.attorney.rules };
+            state.isUnlocked = state.attorney.id === 'custom'; 
+            if (!state.rules.obo) state.dependents = []; 
+            updateUI();
+        }
+
+        function toggleUnlock() {
+            if (state.attorney.id === 'custom') return;
+            state.isUnlocked = !state.isUnlocked;
+            updateUI();
+        }
+
+        function toggleRule(key, options) {
+            if (!state.isUnlocked) return;
+            state.rules[key] = state.rules[key] === options[0] ? options[1] : options[0];
+            if (key === 'obo' && !state.rules.obo) state.dependents = [];
+            updateUI();
+        }
+
+        // --- GOOGLE SHEETS SYNC FUNCTION ---
+        async function syncToGoogleSheets() {
+            if (state.attorney.id === 'custom') return;
+
+            const payload = {
+                firm: state.attorney.firm,
+                rules: state.rules
+            };
+
+            els.btnSync.innerHTML = `<i data-lucide="refresh-cw" class="w-4 h-4 animate-spin"></i> Saving...`;
+            els.btnSync.disabled = true;
+            lucide.createIcons();
+
+            try {
+                const response = await fetch(GOOGLE_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showToast("Profile Updated in Database!", "success");
+                    state.attorney.rules = { ...state.rules };
+                    updateUI(); 
+                } else {
+                    showToast("Error updating database.", "error");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Network Error: Could not sync.", "error");
+            } finally {
+                els.btnSync.innerHTML = `<i data-lucide="cloud-upload" class="w-4 h-4"></i> Sync to Google Sheets`;
+                els.btnSync.disabled = false;
+                lucide.createIcons();
+            }
+        }
+
+        // --- DOM RENDERERS ---
+        function updateUI() {
+            // Check for unsaved changes
+            const hasChanges = state.attorney.id !== 'custom' && JSON.stringify(state.rules) !== JSON.stringify(state.attorney.rules);
+            els.btnSync.style.display = hasChanges ? 'flex' : 'none';
+
+            // Unlock UI
+            if (state.attorney.id === 'custom') {
+                els.btnUnlock.style.display = 'none';
+            } else {
+                els.btnUnlock.style.display = 'flex';
+                els.iconLock.setAttribute('data-lucide', state.isUnlocked ? 'unlock' : 'lock');
+                els.textLock.textContent = state.isUnlocked ? 'UNLOCKED' : 'UNLOCK';
+                els.btnUnlock.className = `text-[10px] font-bold px-2 py-0.5 rounded-full transition-all flex items-center gap-1 cursor-pointer ${state.isUnlocked ? 'bg-blue-500/10 text-blue-500' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-amber-500/10 hover:text-amber-500'}`;
+            }
+
+            // Toggles Stylings
+            Object.values(els.toggles).forEach(t => {
+                t.classList.toggle('cursor-pointer', state.isUnlocked);
+                t.classList.toggle('hover:border-amber-500', state.isUnlocked);
+            });
+
+            // Badges
+            els.badges.quals.textContent = state.rules.quals;
+            els.badges.quals.className = `text-xs font-bold px-2 py-1 rounded-md ${state.rules.quals === 'Long' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-slate-500/10 text-slate-500'}`;
+            
+            els.badges.cover.textContent = state.rules.cover ? 'YES' : 'NO';
+            els.badges.cover.className = `text-xs font-bold px-2 py-1 rounded-md ${state.rules.cover ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`;
+            
+            els.badges.link.textContent = state.rules.linkNo ? 'REQ' : 'HIDE';
+            els.badges.link.className = `text-xs font-bold px-2 py-1 rounded-md ${state.rules.linkNo ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`;
+            
+            els.badges.obo.textContent = state.rules.obo ? 'ALLOW' : 'BLOCK';
+            els.badges.obo.className = `text-xs font-bold px-2 py-1 rounded-md ${state.rules.obo ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`;
+
+            // Modules
+            els.mods.simple.className = `flex-1 py-2 text-sm font-bold rounded-lg transition-all z-10 ${state.complexity === 'simple' ? 'bg-white dark:bg-slate-700 shadow-sm text-amber-600 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'}`;
+            els.mods.extensive.className = `flex-1 py-2 text-sm font-bold rounded-lg transition-all z-10 ${state.complexity === 'extensive' ? 'bg-white dark:bg-slate-700 shadow-sm text-amber-600 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'}`;
+
+            // Fields visibility
+            els.containers.links.style.display = state.rules.linkNo ? 'grid' : 'none';
+            els.alertLink.style.display = state.rules.linkNo ? 'flex' : 'none';
+            els.containers.obo.style.display = state.rules.obo ? 'flex' : 'none';
+
+            lucide.createIcons();
+            renderDependents();
+            renderPreview();
+        }
+
+        function renderDependents() {
+            els.oboList.innerHTML = '';
+            state.dependents.forEach((dep, idx) => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center gap-2 pl-4 border-l-2 border-amber-500/30 mb-2';
+                div.innerHTML = `
+                    <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 w-8 shrink-0">OBO</div>
+                    <input type="text" placeholder="Dependent Name" value="${dep}" class="obo-input flex-1 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm outline-none focus:border-amber-500 dark:text-white transition-all" data-idx="${idx}">
+                    <button class="obo-remove p-2 text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all" data-idx="${idx}"><i data-lucide="minus" class="w-4 h-4"></i></button>
+                `;
+                els.oboList.appendChild(div);
+            });
+            lucide.createIcons();
+
+            document.querySelectorAll('.obo-input').forEach(input => {
+                input.addEventListener('input', (e) => { state.dependents[e.target.dataset.idx] = e.target.value; renderPreview(); });
+            });
+            document.querySelectorAll('.obo-remove').forEach(btn => {
+                btn.addEventListener('click', (e) => { state.dependents.splice(e.currentTarget.dataset.idx, 1); updateUI(); });
+            });
+        }
+
+        function renderPreview() {
+            if (!state.rules) return;
+            const p = state.form.plaintiff.toUpperCase() || '[PLAINTIFF NAME]';
+            const c = state.form.case || '[CASE NUMBER]';
+            let txt = '';
+
+            if (state.rules.cover) {
+                txt += `ACTUARY CONSULTING\n\nSIGNED & COMMISSIONED AFFIDAVITS\nATT: ${state.attorney.firm.toUpperCase()}\n${p}\n\n`;
+                if (state.dependents.length > 0) {
+                    state.dependents.forEach(dep => { txt += `${p} OBO ${dep.toUpperCase() || '[DEPENDENT]'}\n`; });
+                }
+                txt += `\n=======================================================\n\n`;
+            }
+
+            txt += `IN THE ${state.form.court.toUpperCase()}\n${state.form.div.toUpperCase()}\n\nCase No: ${c}\n`;
+            if (state.rules.linkNo) {
+                txt += `Claim No: ${state.form.claim || '[CLAIM NO]'}\nLink No: ${state.form.link || '[LINK NO]'}\n`;
+            }
+
+            txt += `\nIn the matter between:\n\n`;
+            if (!state.rules.obo || state.dependents.length === 0) {
+                txt += `${p} \t PLAINTIFF\nAND\nROAD ACCIDENT FUND \t DEFENDANT\n`;
+            } else {
+                txt += `${p} \t 1st PLAINTIFF\nobo ${state.dependents[0].toUpperCase() || '[DEPENDENT]'}\n`;
+                state.dependents.slice(1).forEach((dep, idx) => {
+                    txt += `${p} \t ${idx + 2}nd PLAINTIFF\nobo ${dep.toUpperCase() || '[DEPENDENT]'}\n`;
+                });
+                txt += `AND\nROAD ACCIDENT FUND \t DEFENDANT\n`;
+            }
+
+            txt += `\n___________________________________________________________________\nEXPERT AFFIDAVIT\n___________________________________________________________________\n\nI, the undersigned,\nNAMIR WAISBERG\nID Number: 810130 5247 080\n\ndo hereby make oath and state that:\n\n1.\nI am a major male South African Actuary and practicing as such. I am the Director of Actuary Consulting based in Atrium on 5th Building, Corner 5th & Maude Street, Sandown, Sandton, Johannesburg.\n\n2.\nThe facts herein contained, save where otherwise stated or indicated, are within my own knowledge and are, to the best of my knowledge and belief, both true and correct.\n\n3.\nI confirm that I compiled an Actuarial Report for the Plaintiff. I confirm the contents of my Actuarial Report and the opinion raised therein by myself as to the best of my knowledge, true and correct.\n\n`;
+
+            if (state.complexity === 'simple') {
+                txt += `4.\nThis report represents a single-scenario calculation applying the standard Road Accident Fund cap.\n\n`;
+            } else {
+                txt += `4.\nThis report involves a multi-scenario calculation (Scenario 1 vs Scenario 2) and compares complex contingencies regarding the claimant's pre-morbid career trajectory and collateral benefits.\n\n5.\nFurthermore, this report outlines the complex comparative figures for both "Capped" and "Uncapped" loss of earnings, which have been fully detailed in the annexures of the main report.\n\n`;
+            }
+
+            if (state.rules.quals === 'Long') {
+                txt += `6.\nI have the following experience and qualifications:\n- 18 years of experience as a Qualified Actuary.\n- Record for Fastest Qualified Actuary in South Africa.\n- BEconSc (Cum Laude) (Wits) - Actuarial Science & Mathematical Statistics.\n- BSc Hons (Cum Laude) (Wits) - Advanced Mathematics of Finance.\n- BSc Hons (Cum Laude) (Wits) - Actuarial Science.\n- Qualified Actuary - Fellow of the Actuarial Society of South Africa (FASSA).\n- Chartered Financial Analyst (CFA) Charterholder (CFA Institute).\n\n`;
+            } else {
+                txt += `6.\nI hereby confirm as true and correct my qualifications and further details as appear from the summary of my curriculum vitae found within my Actuarial Report.\n\n`;
+            }
+
+            txt += `7.\nThe said Actuarial Report is not attached to this affidavit, so as to avoid the unnecessary prolixity of papers.\n\n\n________________\nNAMIR WAISBERG (DEPONENT)\n\nSIGNED and COMMISSIONED BEFORE ME at SANDTON on the _____ day of ________________ 2026 by the DEPONENT who confirmed that: (i) he is conversant with the contents of this affidavit and that he knows and understands it; (ii) that he has no objection to taking the prescribed oath; (iii) that he considers the oath as binding on his conscience.\n\n\n________________\nCOMMISSIONER OF OATHS`;
+
+            els.preview.textContent = txt;
+        }
+
+        // --- UTILITIES ---
+        function showToast(msg, type="success") {
+            els.toastMsg.textContent = msg;
+            
+            if(type === "loader") {
+                els.toastIcon.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i>`;
+                els.toast.className = "fixed top-6 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-5 py-2.5 rounded-full shadow-lg flex items-center gap-2 z-50 font-bold transition-all duration-300 text-sm";
+            } else if(type === "error") {
+                els.toastIcon.innerHTML = `<i data-lucide="alert-circle" class="w-5 h-5"></i>`;
+                els.toast.className = "fixed top-6 left-1/2 transform -translate-x-1/2 bg-rose-600 text-white px-5 py-2.5 rounded-full shadow-lg flex items-center gap-2 z-50 font-bold transition-all duration-300 text-sm";
+            } else {
+                els.toastIcon.innerHTML = `<i data-lucide="check-circle-2" class="w-5 h-5"></i>`;
+                els.toast.className = "fixed top-6 left-1/2 transform -translate-x-1/2 bg-emerald-500 text-slate-900 px-5 py-2.5 rounded-full shadow-lg flex items-center gap-2 z-50 font-bold transition-all duration-300 text-sm";
+            }
+            
+            lucide.createIcons();
+            els.toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-[-20px]');
+            
+            if (type !== "loader") {
+                setTimeout(() => { els.toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-[-20px]'); }, 3000);
+            }
+        }
+
+        function copyToClipboard() {
+            const ta = document.createElement("textarea");
+            ta.value = els.preview.textContent;
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); showToast("Copied to clipboard!"); } 
+            catch (err) { showToast("Failed to copy text.", "error"); }
+            document.body.removeChild(ta);
+        }
+
+        function exportToWord() {
+            const blob = new Blob([els.preview.textContent], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Affidavit_${state.form.plaintiff.replace(/\s+/g, '_') || 'Draft'}.doc`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("Document downloaded.");
+        }
+
+        init();
+
+    </script>
+</body>
+</html>
