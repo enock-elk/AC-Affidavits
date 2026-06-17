@@ -21,6 +21,13 @@ const STAMP_B64 = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5
 
 const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbw-M9kVkSSXKuJ49tohaconx99-l5VcbU1xSNeUTccX2gs0prok3LltyTyO7mdNKtm8/exec";
 
+// GUARDIAN: Fallback DB for Local Dev / CORS Blocks
+const FALLBACK_DB = [
+  { id: 'custom', firm: '-- Custom / Override --', attorney: '', rules: { quals: 'Long', linkNo: false, cover: false, obo: false, preSign: false } },
+  { id: 'dev1', firm: 'Jacob Modiba Attorneys (DEV FALLBACK)', attorney: 'J Modiba', rules: { quals: 'Long', linkNo: false, cover: true, obo: true, preSign: true } },
+  { id: 'dev2', firm: 'Hirschowitz Flionis (DEV FALLBACK)', attorney: 'Partner', rules: { quals: 'Short', linkNo: true, cover: false, obo: false, preSign: false } }
+];
+
 // GUARDIAN: Helper to auto-generate the ordinal legal date
 const getDefaultDate = () => {
   const d = new Date();
@@ -28,6 +35,18 @@ const getDefaultDate = () => {
   const ord = (n + (n > 0 ? ['TH', 'ST', 'ND', 'RD'][(n > 3 && n < 21) || n % 10 > 3 ? 0 : n % 10] : '')).toUpperCase();
   const month = d.toLocaleString('default', { month: 'long' }).toUpperCase();
   return `this ${ord} day of ${month} ${d.getFullYear()}`;
+};
+
+// GUARDIAN: Safely injects <sup> tags for dates (e.g. 19TH -> 19<sup>TH</sup>)
+const formatOrdinals = (text) => {
+  if (!text) return '';
+  const regex = /(\d+)(ST|ND|RD|TH)\b/gi;
+  const parts = text.split(regex);
+  return parts.map((part, index) => {
+    if (index % 3 === 1) return <span key={index}>{part}</span>;
+    if (index % 3 === 2) return <sup key={index} style={{ fontSize: '0.8em' }}>{part.toUpperCase()}</sup>;
+    return <span key={index}>{part}</span>;
+  });
 };
 
 export default function AffidavitAutomation() {
@@ -63,7 +82,7 @@ export default function AffidavitAutomation() {
     claim: '',
     link: '',
     plaintiff: '',
-    defendent: 'ROAD ACCIDENT FUND', // GUARDIAN: Added dynamic defendant with default
+    defendent: 'ROAD ACCIDENT FUND',
     accDate: '', 
     compDate: '' 
   });
@@ -81,15 +100,17 @@ export default function AffidavitAutomation() {
   const fetchDatabase = async () => {
     try {
       const response = await fetch(GOOGLE_API_URL);
+      if (!response.ok) throw new Error("Network response not ok");
       const data = await response.json();
       const db = [
         { id: 'custom', firm: '-- Custom / Override --', attorney: '', rules: { quals: 'Long', linkNo: false, cover: false, obo: false, preSign: false } },
         ...data
       ];
       setDatabase(db);
-      setLoading(false);
     } catch (error) {
-      console.error("DB Fetch failed", error);
+      console.warn("DB Fetch failed (Likely CORS in dev). Injecting FALLBACK_DB.", error);
+      setDatabase(FALLBACK_DB); // Inject offline fallback data
+    } finally {
       setLoading(false);
     }
   };
@@ -143,11 +164,11 @@ export default function AffidavitAutomation() {
   }, [database, selectedFirmId]);
 
   const filteredFirms = useMemo(() => {
-    if (!firmSearch) return database;
-    const lowerQ = firmSearch.toLowerCase();
+    const cleanSearch = firmSearch.trim().toLowerCase();
+    if (!cleanSearch) return database;
     return database.filter(item => 
-      item.firm.toLowerCase().includes(lowerQ) || 
-      (item.attorney && item.attorney.toLowerCase().includes(lowerQ))
+      item.firm.toLowerCase().includes(cleanSearch) || 
+      (item.attorney && item.attorney.toLowerCase().includes(cleanSearch))
     );
   }, [database, firmSearch]);
 
@@ -251,7 +272,20 @@ export default function AffidavitAutomation() {
              </>
            )}
            {rules.quals === 'Long' ? (
-             <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>I have the following experience and qualifications:<br/>- 18 years of experience as a Qualified Actuary.<br/>- Record for Fastest Qualified Actuary in South Africa.<br/>- BEconSc (Cum Laude) (Wits) - Actuarial Science &amp; Mathematical Statistics.<br/>- BSc Hons (Cum Laude) (Wits) - Advanced Mathematics of Finance.<br/>- BSc Hons (Cum Laude) (Wits) - Actuarial Science.<br/>- Qualified Actuary - Fellow of the Actuarial Society of South Africa (FASSA).<br/>- Chartered Financial Analyst (CFA) Charterholder (CFA Institute).<br/>- I am a Fellow of the Actuarial Society of South Africa, RSP181/2023.</li>
+             <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>
+               I have the following experience and qualifications:
+               {/* GUARDIAN: Forced left alignment block to prevent justify-stretching */}
+               <ul style={{ textAlign: 'left', paddingLeft: '20px', marginTop: '10px', listStyleType: 'none' }}>
+                 <li style={{ marginBottom: '5px' }}>- 18 years of experience as a Qualified Actuary.</li>
+                 <li style={{ marginBottom: '5px' }}>- Record for Fastest Qualified Actuary in South Africa.</li>
+                 <li style={{ marginBottom: '5px' }}>- BEconSc (Cum Laude) (Wits) - Actuarial Science &amp; Mathematical Statistics.</li>
+                 <li style={{ marginBottom: '5px' }}>- BSc Hons (Cum Laude) (Wits) - Advanced Mathematics of Finance.</li>
+                 <li style={{ marginBottom: '5px' }}>- BSc Hons (Cum Laude) (Wits) - Actuarial Science.</li>
+                 <li style={{ marginBottom: '5px' }}>- Qualified Actuary - Fellow of the Actuarial Society of South Africa (FASSA).</li>
+                 <li style={{ marginBottom: '5px' }}>- Chartered Financial Analyst (CFA) Charterholder (CFA Institute).</li>
+                 <li style={{ marginBottom: '5px' }}>- I am a Fellow of the Actuarial Society of South Africa, RSP181/2023.</li>
+               </ul>
+             </li>
            ) : (
              <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>I hereby confirm as true and correct my qualifications and further details as appear from the summary of my curriculum vitae found within my {reportType}.<br/>I am a Fellow of the Actuarial Society of South Africa, RSP181/2023.</li>
            )}
@@ -263,7 +297,18 @@ export default function AffidavitAutomation() {
          <ol style={{ listStyleType: 'decimal', paddingLeft: '40px', margin: '0 0 20px 0', textAlign: 'justify' }}>
           <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>
             {rules.quals === 'Long' ? (
-              <>I am an adult male Actuary practising as such at Actuary Consulting with the following experience and qualifications:<br/>- 18 years of experience as a Qualified Actuary.<br/>- Record for Fastest Qualified Actuary in South Africa.<br/>- BEconSc (Cum Laude) (Wits) - Actuarial Science &amp; Mathematical Statistics.<br/>- BSc Hons (Cum Laude) (Wits) - Advanced Mathematics of Finance.<br/>- BSc Hons (Cum Laude) (Wits) - Actuarial Science.<br/>- Qualified Actuary - Fellow of the Actuarial Society of South Africa (FASSA).<br/>- Chartered Financial Analyst (CFA) Charterholder (CFA Institute).</>
+              <>
+                I am an adult male Actuary practising as such at Actuary Consulting with the following experience and qualifications:
+                <ul style={{ textAlign: 'left', paddingLeft: '20px', marginTop: '10px', listStyleType: 'none' }}>
+                  <li style={{ marginBottom: '5px' }}>- 18 years of experience as a Qualified Actuary.</li>
+                  <li style={{ marginBottom: '5px' }}>- Record for Fastest Qualified Actuary in South Africa.</li>
+                  <li style={{ marginBottom: '5px' }}>- BEconSc (Cum Laude) (Wits) - Actuarial Science &amp; Mathematical Statistics.</li>
+                  <li style={{ marginBottom: '5px' }}>- BSc Hons (Cum Laude) (Wits) - Advanced Mathematics of Finance.</li>
+                  <li style={{ marginBottom: '5px' }}>- BSc Hons (Cum Laude) (Wits) - Actuarial Science.</li>
+                  <li style={{ marginBottom: '5px' }}>- Qualified Actuary - Fellow of the Actuarial Society of South Africa (FASSA).</li>
+                  <li style={{ marginBottom: '5px' }}>- Chartered Financial Analyst (CFA) Charterholder (CFA Institute).</li>
+                </ul>
+              </>
             ) : (
               <>I am an adult male Actuary practising as such at Actuary Consulting situated at Atrium on 5th Building, Corner 5th &amp; Maude Street, Sandown, Sandton, Johannesburg.</>
             )}
@@ -274,15 +319,15 @@ export default function AffidavitAutomation() {
        );
     } else if (docCategory === 'confirmatory') {
        return (
-         <>
-          <p style={{ marginBottom: '20px' }}>I am an adult male Actuary, and I am currently practicing under the name and style of Actuary Consulting situated at Atrium on 5th Building, Corner 5th &amp; Maude Street, Sandown, Sandton, Johannesburg.</p>
-          <p style={{ marginBottom: '20px' }}>The facts deposed to herein are, unless the context indicates otherwise, within my personal knowledge and belief and are both true and correct.</p>
-          <p style={{ marginBottom: '20px' }}>I was requested by the offices of {activeFirm.firm} to provide a certificate of value for Loss of Earnings for {subjectName} following his involvement in a motor vehicle accident on the {accDate}.</p>
-          <p style={{ marginBottom: '20px' }}>The purpose of the {reportType} was to establish whether or not his subsequent injuries due to the motor vehicle caused financial loss to his dependents.</p>
-          <p style={{ marginBottom: '20px' }}>In executing my mandate, I had regard to the proof of past and future earnings of {subjectName} had the Motor vehicle Accident not occurred, and I confirm that the plaintiff has suffered a past loss and shall continue to suffer future loss owing to the aftermath of the accident. The total loss of earnings amounted to R {calcAmount || '[AMOUNT]'}</p>
-          <p style={{ marginBottom: '20px' }}>I produced an {reportType} of the value of my findings on the {reportDate}.</p>
-          <p style={{ marginBottom: '20px' }}>I stand by the findings I made in the {reportType} and will avail myself should oral testimony herein be required.<br/><br/>That is all I wish to state.</p>
-         </>
+         <ol style={{ listStyleType: 'decimal', paddingLeft: '40px', margin: '0 0 20px 0', textAlign: 'justify' }}>
+          <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>I am an adult male Actuary, and I am currently practicing under the name and style of Actuary Consulting situated at Atrium on 5th Building, Corner 5th &amp; Maude Street, Sandown, Sandton, Johannesburg.</li>
+          <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>The facts deposed to herein are, unless the context indicates otherwise, within my personal knowledge and belief and are both true and correct.</li>
+          <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>I was requested by the offices of {activeFirm.firm} to provide a certificate of value for Loss of Earnings for {subjectName} following his involvement in a motor vehicle accident on the {accDate}.</li>
+          <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>The purpose of the {reportType} was to establish whether or not his subsequent injuries due to the motor vehicle caused financial loss to his dependents.</li>
+          <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>In executing my mandate, I had regard to the proof of past and future earnings of {subjectName} had the Motor vehicle Accident not occurred, and I confirm that the plaintiff has suffered a past loss and shall continue to suffer future loss owing to the aftermath of the accident. The total loss of earnings amounted to R {calcAmount || '[AMOUNT]'}</li>
+          <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>I produced an {reportType} of the value of my findings on the {reportDate}.</li>
+          <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>I stand by the findings I made in the {reportType} and will avail myself should oral testimony herein be required.<br/><br/>That is all I wish to state.</li>
+         </ol>
        );
     } else if (docCategory === 'lieu') {
        return (
@@ -308,7 +353,18 @@ export default function AffidavitAutomation() {
        return (
          <ol style={{ listStyleType: 'decimal', paddingLeft: '40px', margin: '0 0 20px 0', textAlign: 'justify' }}>
            <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>I am an adult Actuary, founder and Managing Director at Actuary Consulting situated at Atrium on 5th Building Corner 5th &amp; Maude Street, Sandown, Sandton, Johannesburg. The facts herein contained are within my personal Knowledge and are both true and correct, unless the context indicates otherwise.</li>
-           <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>I have the following experience and qualifications:<br/>- 18 years of experience as a Qualified Actuary.<br/>- Record for Fastest Qualified Actuary in South Africa.<br/>- BEconSc (Cum Laude) (Wits) - Actuarial Science &amp; Mathematical Statistics.<br/>- BSc Hons (Cum Laude) (Wits) - Advanced Mathematics of Finance.<br/>- BSc Hons (Cum Laude) (Wits) - Actuarial Science.<br/>- Qualified Actuary - Fellow of the Actuarial Society of South Africa (FASSA).<br/>- Chartered Financial Analyst (CFA) Charterholder (CFA Institute).</li>
+           <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>
+             I have the following experience and qualifications:
+             <ul style={{ textAlign: 'left', paddingLeft: '20px', marginTop: '10px', listStyleType: 'none' }}>
+                <li style={{ marginBottom: '5px' }}>- 18 years of experience as a Qualified Actuary.</li>
+                <li style={{ marginBottom: '5px' }}>- Record for Fastest Qualified Actuary in South Africa.</li>
+                <li style={{ marginBottom: '5px' }}>- BEconSc (Cum Laude) (Wits) - Actuarial Science &amp; Mathematical Statistics.</li>
+                <li style={{ marginBottom: '5px' }}>- BSc Hons (Cum Laude) (Wits) - Advanced Mathematics of Finance.</li>
+                <li style={{ marginBottom: '5px' }}>- BSc Hons (Cum Laude) (Wits) - Actuarial Science.</li>
+                <li style={{ marginBottom: '5px' }}>- Qualified Actuary - Fellow of the Actuarial Society of South Africa (FASSA).</li>
+                <li style={{ marginBottom: '5px' }}>- Chartered Financial Analyst (CFA) Charterholder (CFA Institute).</li>
+             </ul>
+           </li>
            <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>Actuary Consulting has been instructed to provide a Capitalised Present Value amount of the Loss of Support by the dependents of the late {subjectName}, as a result of his death due to a motor vehicle accident that occurred on {accDate}.</li>
            <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>The resultant Capitalised Present Value has been determined as of {reportDate} (Calculation Date).</li>
            <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>I subsequently prepared an {reportType} dated {reportDate}, quantifying the financial impact, including loss of support, future related expenses (where applicable), and contingencies, based on the expert evidence provided.</li>
@@ -415,7 +471,7 @@ export default function AffidavitAutomation() {
         {/* Title Break */}
         <hr style={{ borderTop: '2px solid black', margin: '5px 0' }} />
         <h2 style={{ textAlign: 'center', fontWeight: 'bold', textTransform: 'uppercase', fontSize: '12pt', margin: '15px 0', letterSpacing: '2px' }}>
-           {docCategory === 'sworn' ? `,${docTitle},` : docTitle} 
+           {docTitle} 
         </h2>
         <hr style={{ borderTop: '2px solid black', margin: '5px 0 30px 0' }} />
 
@@ -447,7 +503,7 @@ export default function AffidavitAutomation() {
                    <p style={{ fontWeight: 'bold', margin: 0 }}>N WAISBERG</p>
                 </div>
                 <p style={{ marginBottom: '20px' }}>
-                  Signed at SANDTON on {signDate} after the deponent has declared:
+                  Signed at <strong>SANDTON</strong> on <strong>{formatOrdinals(signDate)}</strong> after the deponent has declared:
                 </p>
                 {/* GUARDIAN: Word native alphabet list */}
                 <ol type="a" style={{ listStyleType: 'lower-alpha', margin: '0 0 40px 40px', padding: 0 }}>
@@ -464,15 +520,15 @@ export default function AffidavitAutomation() {
                 
                 {docCategory === 'confirmatory' || docCategory === 'lieu' ? (
                   <p style={{ marginBottom: '40px', textAlign: 'justify' }}>
-                    I certify that the deponent has acknowledged that he knows and understands the contents of this affidavit which was signed and sworn to before me at SANDTON on {signDate}, the Deponent having acknowledged that he knows and understands the contents of this Affidavit, which is deposed to in accordance with the regulations governing the administration of an oath as more fully set out in Government Notice R 1258 of the 21st of July 1972, as amended by Government Notice 1648 dated the 19th of August 1977 and Government Notice 903 dated the 10th July 1998.
+                    I certify that the deponent has acknowledged that he knows and understands the contents of this affidavit which was signed and sworn to before me at <strong>SANDTON</strong> on <strong>{formatOrdinals(signDate)}</strong>, the Deponent having acknowledged that he knows and understands the contents of this Affidavit, which is deposed to in accordance with the regulations governing the administration of an oath as more fully set out in <strong>Government Notice R 1258</strong> of the <strong>21<sup>ST</sup> of July 1972</strong>, as amended by <strong>Government Notice 1648</strong> dated the <strong>19<sup>TH</sup> of August 1977</strong> and <strong>Government Notice 903</strong> dated the <strong>10<sup>TH</sup> of July 1998</strong>.
                   </p>
                 ) : docCategory === 'supporting' ? (
                   <p style={{ marginBottom: '40px', textAlign: 'justify' }}>
-                    Thus, signed and sworn to at SANDTON on {signDate}, before me, Commissioner of Oath, after the deponent declared that he read the contents of this affidavit, that is both true and correct, that he has no objection in taking the prescribed oath and considers it binding on his conscience.
+                    Thus, signed and sworn to at <strong>SANDTON</strong> on <strong>{formatOrdinals(signDate)}</strong>, before me, Commissioner of Oath, after the deponent declared that he read the contents of this affidavit, that is both true and correct, that he has no objection in taking the prescribed oath and considers it binding on his conscience.
                   </p>
                 ) : (
                   <p style={{ marginBottom: '40px', textAlign: 'justify' }}>
-                    SIGNED and COMMISSIONED BEFORE ME at SANDTON on {signDate} by the DEPONENT who confirmed that: (i) he is conversant with the contents of this affidavit and that he knows and understands it; (ii) that he has no objection to taking the prescribed oath; (iii) that he considers the oath as binding on his conscience.
+                    SIGNED and COMMISSIONED BEFORE ME at <strong>SANDTON</strong> on <strong>{formatOrdinals(signDate)}</strong> by the DEPONENT who confirmed that: (i) he is conversant with the contents of this affidavit and that he knows and understands it; (ii) that he has no objection to taking the prescribed oath; (iii) that he considers the oath as binding on his conscience.
                   </p>
                 )}
               </>

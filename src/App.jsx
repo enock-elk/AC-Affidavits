@@ -12,10 +12,10 @@ import {
 } from 'lucide-react';
 
 // Import standalone modular components
-import TrelloDashboard from './TrelloDashboard.jsx';
-import CaseMaker from './CaseMaker.jsx';
-import EmailEngine from './EmailEngine.jsx';
-import AffidavitAutomation from './AffidavitAutomation.jsx';
+import TrelloDashboard from './TrelloDashboard';
+import CaseMaker from './CaseMaker';
+import EmailEngine from './EmailEngine';
+import AffidavitAutomation from './AffidavitAutomation';
 
 // ============================================================================
 // MAIN APP SHELL
@@ -46,21 +46,6 @@ export default function App() {
   const handleLogout = () => {
     setIsAuthenticated(false);
     setCurrentRoute('affidavits');
-  };
-
-  const renderView = () => {
-    switch (currentRoute) {
-      case 'dashboard':
-        return <TrelloDashboard />;
-      case 'casemaker':
-        return <CaseMaker />;
-      case 'emails':
-        return <EmailEngine />;
-      case 'affidavits':
-        return <AffidavitAutomation />;
-      default:
-        return <AffidavitAutomation />;
-    }
   };
 
   if (!isAuthenticated) {
@@ -151,13 +136,13 @@ export default function App() {
       <div className="flex-1 relative flex flex-col h-full bg-slate-50 dark:bg-slate-900/50">
         <header className="h-16 shrink-0 flex items-center justify-between px-8 border-b border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 backdrop-blur-md z-10">
            <h1 className="text-sm font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
-             {currentRoute === 'dashboard' && 'Active Monitoring'}
-             {currentRoute === 'casemaker' && 'Workspace Setup'}
-             {currentRoute === 'emails' && 'Communications Engine'}
-             {currentRoute === 'affidavits' && 'Legal Document Automation'}
+             {currentRoute === 'dashboard' && 'Trello Watcher'}
+             {currentRoute === 'casemaker' && 'Case Maker'}
+             {currentRoute === 'emails' && 'Draft Email Generator'}
+             {currentRoute === 'affidavits' && 'Affidavit Automation'}
            </h1>
            <div className="flex items-center gap-3">
-             {currentRoute === 'affidavits' ? (
+             {currentRoute === 'affidavits' || currentRoute === 'dashboard' || currentRoute === 'casemaker'? (
                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
                   <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                   <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">System Online</span>
@@ -165,14 +150,26 @@ export default function App() {
              ) : (
                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20">
                   <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                  <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Dev Mode</span>
+                  <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">In Development</span>
                </div>
              )}
            </div>
         </header>
 
         <main className="flex-1 overflow-hidden relative">
-          {renderView()}
+          {/* GUARDIAN: CSS-based display toggling to preserve component states (specifically Web Workers) */}
+          <div className={currentRoute === 'dashboard' ? 'block h-full' : 'hidden'}>
+            <TrelloDashboard />
+          </div>
+          <div className={currentRoute === 'casemaker' ? 'block h-full' : 'hidden'}>
+            <CaseMaker />
+          </div>
+          <div className={currentRoute === 'emails' ? 'block h-full' : 'hidden'}>
+            <EmailEngine />
+          </div>
+          <div className={currentRoute === 'affidavits' ? 'block h-full' : 'hidden'}>
+            <AffidavitAutomation />
+          </div>
         </main>
       </div>
     </div>
