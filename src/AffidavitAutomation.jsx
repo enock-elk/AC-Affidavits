@@ -274,16 +274,16 @@ export default function AffidavitAutomation() {
            {rules.quals === 'Long' ? (
              <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>
                I have the following experience and qualifications:
-               {/* GUARDIAN: Forced left alignment block to prevent justify-stretching */}
-               <ul style={{ textAlign: 'left', paddingLeft: '20px', marginTop: '10px', listStyleType: 'none' }}>
-                 <li style={{ marginBottom: '5px' }}>- 18 years of experience as a Qualified Actuary.</li>
-                 <li style={{ marginBottom: '5px' }}>- Record for Fastest Qualified Actuary in South Africa.</li>
-                 <li style={{ marginBottom: '5px' }}>- BEconSc (Cum Laude) (Wits) - Actuarial Science &amp; Mathematical Statistics.</li>
-                 <li style={{ marginBottom: '5px' }}>- BSc Hons (Cum Laude) (Wits) - Advanced Mathematics of Finance.</li>
-                 <li style={{ marginBottom: '5px' }}>- BSc Hons (Cum Laude) (Wits) - Actuarial Science.</li>
-                 <li style={{ marginBottom: '5px' }}>- Qualified Actuary - Fellow of the Actuarial Society of South Africa (FASSA).</li>
-                 <li style={{ marginBottom: '5px' }}>- Chartered Financial Analyst (CFA) Charterholder (CFA Institute).</li>
-                 <li style={{ marginBottom: '5px' }}>- I am a Fellow of the Actuarial Society of South Africa, RSP181/2023.</li>
+               {/* GUARDIAN: Removed manual hyphens and set listStyleType to 'disc' to let MS Word generate single clean bullets */}
+               <ul style={{ textAlign: 'left', paddingLeft: '20px', marginTop: '10px', listStyleType: 'disc' }}>
+                 <li style={{ marginBottom: '5px' }}>18 years of experience as a Qualified Actuary.</li>
+                 <li style={{ marginBottom: '5px' }}>Record for Fastest Qualified Actuary in South Africa.</li>
+                 <li style={{ marginBottom: '5px' }}>BEconSc (Cum Laude) (Wits) - Actuarial Science &amp; Mathematical Statistics.</li>
+                 <li style={{ marginBottom: '5px' }}>BSc Hons (Cum Laude) (Wits) - Advanced Mathematics of Finance.</li>
+                 <li style={{ marginBottom: '5px' }}>BSc Hons (Cum Laude) (Wits) - Actuarial Science.</li>
+                 <li style={{ marginBottom: '5px' }}>Qualified Actuary - Fellow of the Actuarial Society of South Africa (FASSA).</li>
+                 <li style={{ marginBottom: '5px' }}>Chartered Financial Analyst (CFA) Charterholder (CFA Institute).</li>
+                 <li style={{ marginBottom: '5px' }}>I am a Fellow of the Actuarial Society of South Africa, RSP181/2023.</li>
                </ul>
              </li>
            ) : (
@@ -299,14 +299,14 @@ export default function AffidavitAutomation() {
             {rules.quals === 'Long' ? (
               <>
                 I am an adult male Actuary practising as such at Actuary Consulting with the following experience and qualifications:
-                <ul style={{ textAlign: 'left', paddingLeft: '20px', marginTop: '10px', listStyleType: 'none' }}>
-                  <li style={{ marginBottom: '5px' }}>- 18 years of experience as a Qualified Actuary.</li>
-                  <li style={{ marginBottom: '5px' }}>- Record for Fastest Qualified Actuary in South Africa.</li>
-                  <li style={{ marginBottom: '5px' }}>- BEconSc (Cum Laude) (Wits) - Actuarial Science &amp; Mathematical Statistics.</li>
-                  <li style={{ marginBottom: '5px' }}>- BSc Hons (Cum Laude) (Wits) - Advanced Mathematics of Finance.</li>
-                  <li style={{ marginBottom: '5px' }}>- BSc Hons (Cum Laude) (Wits) - Actuarial Science.</li>
-                  <li style={{ marginBottom: '5px' }}>- Qualified Actuary - Fellow of the Actuarial Society of South Africa (FASSA).</li>
-                  <li style={{ marginBottom: '5px' }}>- Chartered Financial Analyst (CFA) Charterholder (CFA Institute).</li>
+                <ul style={{ textAlign: 'left', paddingLeft: '20px', marginTop: '10px', listStyleType: 'disc' }}>
+                  <li style={{ marginBottom: '5px' }}>18 years of experience as a Qualified Actuary.</li>
+                  <li style={{ marginBottom: '5px' }}>Record for Fastest Qualified Actuary in South Africa.</li>
+                  <li style={{ marginBottom: '5px' }}>BEconSc (Cum Laude) (Wits) - Actuarial Science &amp; Mathematical Statistics.</li>
+                  <li style={{ marginBottom: '5px' }}>BSc Hons (Cum Laude) (Wits) - Advanced Mathematics of Finance.</li>
+                  <li style={{ marginBottom: '5px' }}>BSc Hons (Cum Laude) (Wits) - Actuarial Science.</li>
+                  <li style={{ marginBottom: '5px' }}>Qualified Actuary - Fellow of the Actuarial Society of South Africa (FASSA).</li>
+                  <li style={{ marginBottom: '5px' }}>Chartered Financial Analyst (CFA) Charterholder (CFA Institute).</li>
                 </ul>
               </>
             ) : (
@@ -355,14 +355,14 @@ export default function AffidavitAutomation() {
            <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>I am an adult Actuary, founder and Managing Director at Actuary Consulting situated at Atrium on 5th Building Corner 5th &amp; Maude Street, Sandown, Sandton, Johannesburg. The facts herein contained are within my personal Knowledge and are both true and correct, unless the context indicates otherwise.</li>
            <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>
              I have the following experience and qualifications:
-             <ul style={{ textAlign: 'left', paddingLeft: '20px', marginTop: '10px', listStyleType: 'none' }}>
-                <li style={{ marginBottom: '5px' }}>- 18 years of experience as a Qualified Actuary.</li>
-                <li style={{ marginBottom: '5px' }}>- Record for Fastest Qualified Actuary in South Africa.</li>
-                <li style={{ marginBottom: '5px' }}>- BEconSc (Cum Laude) (Wits) - Actuarial Science &amp; Mathematical Statistics.</li>
-                <li style={{ marginBottom: '5px' }}>- BSc Hons (Cum Laude) (Wits) - Advanced Mathematics of Finance.</li>
-                <li style={{ marginBottom: '5px' }}>- BSc Hons (Cum Laude) (Wits) - Actuarial Science.</li>
-                <li style={{ marginBottom: '5px' }}>- Qualified Actuary - Fellow of the Actuarial Society of South Africa (FASSA).</li>
-                <li style={{ marginBottom: '5px' }}>- Chartered Financial Analyst (CFA) Charterholder (CFA Institute).</li>
+             <ul style={{ textAlign: 'left', paddingLeft: '20px', marginTop: '10px', listStyleType: 'disc' }}>
+                <li style={{ marginBottom: '5px' }}>18 years of experience as a Qualified Actuary.</li>
+                <li style={{ marginBottom: '5px' }}>Record for Fastest Qualified Actuary in South Africa.</li>
+                <li style={{ marginBottom: '5px' }}>BEconSc (Cum Laude) (Wits) - Actuarial Science &amp; Mathematical Statistics.</li>
+                <li style={{ marginBottom: '5px' }}>BSc Hons (Cum Laude) (Wits) - Advanced Mathematics of Finance.</li>
+                <li style={{ marginBottom: '5px' }}>BSc Hons (Cum Laude) (Wits) - Actuarial Science.</li>
+                <li style={{ marginBottom: '5px' }}>Qualified Actuary - Fellow of the Actuarial Society of South Africa (FASSA).</li>
+                <li style={{ marginBottom: '5px' }}>Chartered Financial Analyst (CFA) Charterholder (CFA Institute).</li>
              </ul>
            </li>
            <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>Actuary Consulting has been instructed to provide a Capitalised Present Value amount of the Loss of Support by the dependents of the late {subjectName}, as a result of his death due to a motor vehicle accident that occurred on {accDate}.</li>
@@ -541,10 +541,7 @@ export default function AffidavitAutomation() {
                style={{ height: '110px', objectFit: 'contain', marginBottom: '10px' }}
              />
            ) : (
-             <>
-               <div style={{ width: '250px', borderTop: '1.5px solid black', paddingTop: '10px', marginTop: '80px', marginBottom: '10px' }}></div>
-               <p style={{ fontWeight: 'bold', margin: 0, textTransform: 'uppercase' }}>COMMISSIONER OF OATHS</p>
-             </>
+             <div style={{ height: '80px' }}></div>
            )}
         </div>
       </div>
