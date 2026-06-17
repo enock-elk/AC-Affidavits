@@ -10,7 +10,8 @@ import {
   AlertTriangle,
   Settings2,
   Upload,
-  Activity
+  Activity,
+  Terminal
 } from 'lucide-react';
 
 const API_KEY = '4a2f87929257d1557d800be137588c07';
@@ -168,12 +169,13 @@ export default function TrelloDashboard() {
   const [gridStats, setGridStats] = useState({ total: 0, buckets: [] });
   const [isLoading, setIsLoading] = useState(false);
 
-  // --- AUDIO & PREFERENCES STATE ---
+  // --- AUDIO, PREFERENCES, & LOGS STATE ---
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [alertMode, setAlertMode] = useState(localStorage.getItem('watcher_mode') || 'wake');
   const [tone, setTone] = useState(localStorage.getItem('watcher_tone_wake') || 'default');
   const [stealthEnabled, setStealthEnabled] = useState(localStorage.getItem('watcher_stealth') !== 'false');
   const [customAudioUrl, setCustomAudioUrl] = useState(localStorage.getItem('watcher_custom_sound') || null);
+  const [logs, setLogs] = useState([]); // GUARDIAN: New Log State Array
 
   // Alarm State
   const [alarmActive, setAlarmActive] = useState(false);
@@ -318,7 +320,7 @@ export default function TrelloDashboard() {
     if (alertMode === 'wake') localStorage.setItem('watcher_tone_wake', value);
     else localStorage.setItem('watcher_tone_notify', value);
 
-    // Preload audio - GUARDIAN: Using relative path ./ to ensure it works on GitHub Pages
+    // Preload audio
     if (value !== 'default' && value !== 'custom') {
       const audio = new Audio(`./${value}`);
       audio.load();
@@ -377,6 +379,11 @@ export default function TrelloDashboard() {
       }
     } catch (err) { console.warn("Wake lock failed", err); }
 
+    // GUARDIAN: Ask for desktop notifications on startup
+    if ("Notification" in window && Notification.permission !== "granted") {
+        Notification.requestPermission();
+    }
+
     if (stealthEnabled) {
       startSilentNoise();
     }
@@ -402,6 +409,15 @@ export default function TrelloDashboard() {
           }
           return currentSoundState;
         });
+      } else if (data.type === 'log' || data.type === 'error') {
+        // GUARDIAN: Intercept worker logs and errors, push to state
+        setLogs(prev => {
+          const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          const isErr = data.type === 'error' || data.isError;
+          const msgStr = isErr && !data.msg.startsWith("Error:") ? "Error: " + data.msg : data.msg;
+          const newLog = { id: Date.now() + Math.random(), time, msg: msgStr, isError: isErr };
+          return [newLog, ...prev].slice(0, 50); // Cap at 50 logs to prevent memory leaks
+        });
       }
     };
 
@@ -411,6 +427,7 @@ export default function TrelloDashboard() {
     });
 
     setIsMonitoring(true);
+    setLogs([]); // Clear logs on fresh start
   };
 
   const stopMonitoring = () => {
@@ -427,6 +444,13 @@ export default function TrelloDashboard() {
     setIsMonitoring(false);
     setGridStats({ total: 0, buckets: [] });
     stopAlarm();
+    
+    // GUARDIAN: Log stop action
+    setLogs(prev => {
+      const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const newLog = { id: Date.now() + Math.random(), time, msg: "Monitoring stopped.", isError: false };
+      return [newLog, ...prev].slice(0, 50);
+    });
   };
 
   // --- GUARDIAN: 30HZ STEALTH KEEP-ALIVE ---
@@ -471,6 +495,26 @@ export default function TrelloDashboard() {
     setAlarmData({ cardName, listName });
     setAlarmActive(true);
     
+    // GUARDIAN: Append Alarm to log
+    setLogs(prev => {
+      const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const newLog = { id: Date.now() + Math.random(), time, msg: `ALARM: New card in ${listName}`, isError: false };
+      return [newLog, ...prev].slice(0, 50);
+    });
+
+    // GUARDIAN: Native Desktop Push Notification
+    if ("Notification" in window && Notification.permission === "granted" && document.visibilityState !== "visible") {
+        try {
+            new Notification("Trello Alert!", {
+                body: `New card in ${listName}: ${cardName}`,
+                icon: '/icons/icon-192.png',
+                tag: 'trello-alert',
+                renotify: true,
+                vibrate: [200, 100, 200]
+            });
+        } catch(e) { console.log("Notification failed", e); }
+    }
+
     const shouldLoop = (alertMode === 'wake');
     playAudio(shouldLoop);
 
@@ -523,7 +567,6 @@ export default function TrelloDashboard() {
       if (tone === 'custom' && customAudioUrl) {
         audioSrc = customAudioUrl;
       } else if (tone !== 'default') {
-        // GUARDIAN: Using relative path ./ to ensure it works on GitHub Pages
         audioSrc = `./${tone}`;
       }
 
@@ -823,11 +866,11 @@ export default function TrelloDashboard() {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: SMART GRID */}
-        <div className="flex-1 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col overflow-hidden relative">
+        {/* RIGHT COLUMN: SMART GRID & TERMINAL LOGS */}
+        <div className="flex-1 flex flex-col overflow-hidden bg-slate-100/50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm relative">
           
           {/* Status Header */}
-          <div className="p-6 border-b border-slate-100 dark:border-slate-700/50 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-900/20">
+          <div className="p-6 border-b border-slate-200 dark:border-slate-700/50 flex items-center justify-between shrink-0 bg-white/50 dark:bg-slate-900/20">
             <div>
               <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100">Live Grid</h3>
               <p className="text-sm text-slate-500 dark:text-slate-400">Total Cards: <span className="font-black text-blue-500">{gridStats.total}</span></p>
@@ -840,7 +883,7 @@ export default function TrelloDashboard() {
           </div>
 
           {/* Grid Area */}
-          <div className="flex-1 overflow-y-auto p-6 bg-slate-100/50 dark:bg-slate-900/50">
+          <div className="flex-1 overflow-y-auto p-6">
             {!isMonitoring ? (
               <div className="h-full flex flex-col items-center justify-center text-slate-400">
                 <Kanban className="w-16 h-16 mb-4 opacity-20" />
@@ -856,6 +899,27 @@ export default function TrelloDashboard() {
                 ))}
               </div>
             )}
+          </div>
+
+          {/* GUARDIAN: TERMINAL ACTIVITY LOG UI */}
+          <div className="shrink-0 p-6 pt-0">
+             <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-2">
+               <Terminal size={14} /> Activity Log
+             </div>
+             <div className="w-full font-mono text-xs text-slate-600 dark:text-slate-400 h-32 overflow-y-auto custom-scroll bg-slate-200/50 dark:bg-[#0b1120] p-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-inner flex flex-col">
+                <div className="flex flex-col gap-1">
+                  {logs.length === 0 ? (
+                    <div className="opacity-50 italic">System standing by...</div>
+                  ) : (
+                    logs.map(l => (
+                      <div key={l.id} className={`${l.isError ? "text-rose-500 font-bold" : ""}`}>
+                        <span className="opacity-50 mr-2">[{l.time}]</span>
+                        {l.msg}
+                      </div>
+                    ))
+                  )}
+                </div>
+             </div>
           </div>
           
         </div>
