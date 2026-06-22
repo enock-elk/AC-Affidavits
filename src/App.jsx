@@ -22,7 +22,9 @@ import AffidavitAutomation from './AffidavitAutomation';
 // ============================================================================
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // GUARDIAN: Check if user was already logged in
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('currentUser'));
+  const [userName, setUserName] = useState('');
   const [currentRoute, setCurrentRoute] = useState('affidavits'); 
   const [darkMode, setDarkMode] = useState(false);
 
@@ -39,12 +41,17 @@ export default function App() {
     }
   }, [darkMode]);
 
-  const handleLogin = () => {
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (userName.trim().length < 2) return;
+    localStorage.setItem('currentUser', userName.trim());
     setIsAuthenticated(true);
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('currentUser');
     setIsAuthenticated(false);
+    setUserName('');
     setCurrentRoute('affidavits');
   };
 
@@ -59,15 +66,25 @@ export default function App() {
           </div>
           <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">Command Center</h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm mb-8">
-            Secure workspace. Please authorize with your Google account to access unified tools and Gmail integrations.
+            Secure workspace. Please enter your full name to access unified tools and maintain an audit trail.
           </p>
-          <button 
-            onClick={handleLogin}
-            className="w-full flex items-center justify-center gap-3 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-blue-600/20 transition-all active:scale-95"
-          >
-            <ShieldCheck className="w-5 h-5" />
-            <span>Authorize with Google</span>
-          </button>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <input 
+              type="text" 
+              placeholder="Enter your Full Name" 
+              value={userName}
+              onChange={(e) => setUserName(e.target.value)}
+              required
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all dark:text-white"
+            />
+            <button 
+              type="submit"
+              className="w-full flex items-center justify-center gap-3 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-blue-600/20 transition-all active:scale-95"
+            >
+              <ShieldCheck className="w-5 h-5" />
+              <span>Enter Workspace</span>
+            </button>
+          </form>
         </div>
       </div>
     );

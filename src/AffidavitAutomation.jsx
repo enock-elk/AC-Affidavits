@@ -92,6 +92,11 @@ export default function AffidavitAutomation() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const isDragging = useRef(false);
 
+  // GUARDIAN: Feedback Modal State
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+
   // --- 1. INITIALIZATION ---
   useEffect(() => {
     fetchDatabase();
@@ -243,6 +248,41 @@ export default function AffidavitAutomation() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  // GUARDIAN: Intercepts export and logs feedback to Google Apps Script
+  const handleFeedbackSubmit = async (skipped = false) => {
+    // 1. Download immediately to avoid blocking the user's workflow
+    exportToWord();
+    setShowFeedbackModal(false);
+
+    // 2. Transmit to Google if not skipped
+    if (!skipped && feedbackText.trim()) {
+      try {
+        setIsSubmittingFeedback(true);
+        const payload = {
+          action: 'LOG_FEEDBACK',
+          userName: localStorage.getItem('currentUser') || 'Unknown User',
+          // GUARDIAN: Smart Case Name Formatting (Omits case number if empty)
+          caseName: `${form.plaintiff || '[PLAINTIFF]'} v ${form.defendent || '[DEFENDANT]'}${form.case ? ` (Case: ${form.case})` : ''}`,
+          feedback: feedbackText.trim()
+        };
+        
+        // Fire and forget POST request
+        await fetch(GOOGLE_API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+      } catch (err) {
+        console.error("Feedback sync failed", err);
+      } finally {
+        setIsSubmittingFeedback(false);
+        setFeedbackText('');
+      }
+    } else {
+      setFeedbackText('');
+    }
   };
 
   // --- 4. TEXT CONTENT GENERATOR ---
@@ -834,6 +874,14 @@ export default function AffidavitAutomation() {
             <span className="text-xs font-bold tracking-wide uppercase text-slate-500 dark:text-slate-400">Live Render</span>
           </div>
           <div className="flex gap-3">
+            <a 
+              href="https://docs.google.com/spreadsheets/d/1twLeKxFlNOjD5HmCqIqdTPg5qd_34twgOetm6AD5AYc/edit?gid=432356199#gid=432356199" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold border border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all"
+            >
+              📝 Post-Case Feedback
+            </a>
             <button 
               onClick={() => setIsFullscreen(!isFullscreen)} 
               className="flex items-center justify-center w-10 h-10 rounded-lg text-sm font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-amber-500/10 hover:text-amber-500 hover:border-amber-500/50 transition-all"
@@ -844,7 +892,7 @@ export default function AffidavitAutomation() {
             <button onClick={copyToClipboard} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all">
               <Copy className="w-4 h-4" /> Copy
             </button>
-            <button onClick={exportToWord} className="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold bg-amber-500 hover:bg-amber-600 text-slate-900 shadow-lg shadow-amber-500/20 transition-all">
+            <button onClick={() => setShowFeedbackModal(true)} className="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold bg-amber-500 hover:bg-amber-600 text-slate-900 shadow-lg shadow-amber-500/20 transition-all">
               <Download className="w-4 h-4" /> Export Word
             </button>
           </div>
@@ -858,6 +906,47 @@ export default function AffidavitAutomation() {
           </div>
         </div>
       </div>
+
+      {/* GUARDIAN: INTERCEPT FEEDBACK MODAL */}
+      {showFeedbackModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 w-full max-w-md border border-slate-200 dark:border-slate-700 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-full">
+                <FileSignature size={24} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Quick Feedback</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Help us improve before you download.</p>
+              </div>
+            </div>
+            
+            <textarea 
+              value={feedbackText}
+              onChange={(e) => setFeedbackText(e.target.value)}
+              placeholder="Any issues? Missing clauses? Tell us what to improve..."
+              className="w-full h-32 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm outline-none focus:ring-2 focus:ring-amber-500 dark:text-white resize-none mb-4"
+            />
+            
+            <div className="flex gap-3">
+              <button 
+                onClick={() => handleFeedbackSubmit(true)}
+                className="flex-1 py-3 px-4 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+              >
+                Skip & Download
+              </button>
+              <button 
+                onClick={() => handleFeedbackSubmit(false)}
+                disabled={!feedbackText.trim() || isSubmittingFeedback}
+                className="flex-1 py-3 px-4 rounded-xl text-sm font-bold text-white bg-amber-500 hover:bg-amber-600 shadow-lg shadow-amber-500/20 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isSubmittingFeedback ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                Submit & Download
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
