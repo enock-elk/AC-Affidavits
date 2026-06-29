@@ -288,8 +288,8 @@ export default function AffidavitAutomation() {
   // --- 4. TEXT CONTENT GENERATOR ---
   const renderAffidavitContent = () => {
     const reportType = isRecalc ? "Amended Actuarial Report" : "Actuarial Report";
-    const reportDate = form.compDate || '[COMPILATION DATE]';
-    const accDate = form.accDate || '[ACCIDENT DATE]';
+    const reportDate = form.compDate ? form.compDate : '______________________';
+    const accDate = form.accDate ? form.accDate : '______________________';
     const p = form.plaintiff.toUpperCase() || '[PLAINTIFF NAME]';
     
     // Guardian: Subject logic fallback
@@ -315,7 +315,7 @@ export default function AffidavitAutomation() {
              <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>
                I have the following experience and qualifications:
                {/* GUARDIAN: Removed manual hyphens and set listStyleType to 'disc' to let MS Word generate single clean bullets */}
-               <ul style={{ textAlign: 'left', paddingLeft: '20px', marginTop: '10px', listStyleType: 'disc' }}>
+               <ul style={{ textAlign: 'left', paddingLeft: '20px', margin: '10px 0 20px 0', listStyleType: 'disc' }}>
                  <li style={{ marginBottom: '5px' }}>18 years of experience as a Qualified Actuary.</li>
                  <li style={{ marginBottom: '5px' }}>Record for Fastest Qualified Actuary in South Africa.</li>
                  <li style={{ marginBottom: '5px' }}>BEconSc (Cum Laude) (Wits) - Actuarial Science &amp; Mathematical Statistics.</li>
@@ -339,7 +339,7 @@ export default function AffidavitAutomation() {
             {rules.quals === 'Long' ? (
               <>
                 I am an adult male Actuary practising as such at Actuary Consulting with the following experience and qualifications:
-                <ul style={{ textAlign: 'left', paddingLeft: '20px', marginTop: '10px', listStyleType: 'disc' }}>
+                <ul style={{ textAlign: 'left', paddingLeft: '20px', margin: '10px 0 20px 0', listStyleType: 'disc' }}>
                   <li style={{ marginBottom: '5px' }}>18 years of experience as a Qualified Actuary.</li>
                   <li style={{ marginBottom: '5px' }}>Record for Fastest Qualified Actuary in South Africa.</li>
                   <li style={{ marginBottom: '5px' }}>BEconSc (Cum Laude) (Wits) - Actuarial Science &amp; Mathematical Statistics.</li>
@@ -395,7 +395,7 @@ export default function AffidavitAutomation() {
            <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>I am an adult Actuary, founder and Managing Director at Actuary Consulting situated at Atrium on 5th Building Corner 5th &amp; Maude Street, Sandown, Sandton, Johannesburg. The facts herein contained are within my personal Knowledge and are both true and correct, unless the context indicates otherwise.</li>
            <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>
              I have the following experience and qualifications:
-             <ul style={{ textAlign: 'left', paddingLeft: '20px', marginTop: '10px', listStyleType: 'disc' }}>
+             <ul style={{ textAlign: 'left', paddingLeft: '20px', margin: '10px 0 20px 0', listStyleType: 'disc' }}>
                 <li style={{ marginBottom: '5px' }}>18 years of experience as a Qualified Actuary.</li>
                 <li style={{ marginBottom: '5px' }}>Record for Fastest Qualified Actuary in South Africa.</li>
                 <li style={{ marginBottom: '5px' }}>BEconSc (Cum Laude) (Wits) - Actuarial Science &amp; Mathematical Statistics.</li>
@@ -458,50 +458,42 @@ export default function AffidavitAutomation() {
         {/* Parties Block */}
         <p style={{ marginBottom: '15px' }}>In the matter between:</p>
         
-        <table style={{ width: '100%', marginBottom: '15px', borderCollapse: 'collapse' }}>
-          <tbody>
-             {(!rules.obo || dependents.length === 0) ? (
-               <tr>
-                 <td style={{ width: '70%', fontWeight: 'bold', textTransform: 'uppercase', verticalAlign: 'bottom' }}>{p}</td>
-                 <td style={{ width: '30%', fontWeight: 'bold', textTransform: 'uppercase', textAlign: 'right', verticalAlign: 'bottom' }}>{docCategory === 'los' ? 'APPLICANT' : 'PLAINTIFF'}</td>
-               </tr>
-             ) : (
-               <>
-                  <tr>
-                     <td style={{ width: '70%', fontWeight: 'bold', textTransform: 'uppercase', verticalAlign: 'bottom' }}>{p}</td>
-                     <td style={{ width: '30%', fontWeight: 'bold', textTransform: 'uppercase', textAlign: 'right', verticalAlign: 'bottom' }}>1ST {docCategory === 'los' ? 'APPLICANT' : 'PLAINTIFF'}</td>
-                  </tr>
-                  <tr>
-                     <td style={{ paddingLeft: '20px', textTransform: 'uppercase', paddingBottom: '10px' }}>obo {dependents[0] || '[DEPENDENT]'}</td>
-                     <td></td>
-                  </tr>
-                  {dependents.slice(1).map((dep, idx) => (
-                    <React.Fragment key={idx}>
-                      <tr>
-                         <td style={{ width: '70%', fontWeight: 'bold', textTransform: 'uppercase', verticalAlign: 'bottom', paddingTop: '10px' }}>{p}</td>
-                         <td style={{ width: '30%', fontWeight: 'bold', textTransform: 'uppercase', textAlign: 'right', verticalAlign: 'bottom', paddingTop: '10px' }}>{idx + 2}{idx === 0 ? 'ND' : idx === 1 ? 'RD' : 'TH'} {docCategory === 'los' ? 'APPLICANT' : 'PLAINTIFF'}</td>
-                      </tr>
-                      <tr>
-                         <td style={{ paddingLeft: '20px', textTransform: 'uppercase', paddingBottom: '10px' }}>obo {dep || '[DEPENDENT]'}</td>
-                         <td></td>
-                      </tr>
-                    </React.Fragment>
-                  ))}
-               </>
-             )}
-          </tbody>
-        </table>
+        <div style={{ marginBottom: '15px' }}>
+           {(!rules.obo || dependents.length === 0) ? (
+             <div>
+               <span style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>{p}</span>
+               <span style={{ fontWeight: 'bold', textTransform: 'uppercase', float: 'right' }}>{docCategory === 'los' ? 'APPLICANT' : 'PLAINTIFF'}</span>
+               <div style={{ clear: 'both' }}></div>
+             </div>
+           ) : (
+             <>
+                <div>
+                   <span style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>{p}</span>
+                   <span style={{ fontWeight: 'bold', textTransform: 'uppercase', float: 'right' }}>1ST {docCategory === 'los' ? 'APPLICANT' : 'PLAINTIFF'}</span>
+                   <div style={{ clear: 'both' }}></div>
+                </div>
+                <div style={{ paddingLeft: '20px', textTransform: 'uppercase', paddingBottom: '10px' }}>obo {dependents[0] || '[DEPENDENT]'}</div>
+                {dependents.slice(1).map((dep, idx) => (
+                  <React.Fragment key={idx}>
+                     <div style={{ paddingTop: '10px' }}>
+                        <span style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>{p}</span>
+                        <span style={{ fontWeight: 'bold', textTransform: 'uppercase', float: 'right' }}>{idx + 2}{idx === 0 ? 'ND' : idx === 1 ? 'RD' : 'TH'} {docCategory === 'los' ? 'APPLICANT' : 'PLAINTIFF'}</span>
+                        <div style={{ clear: 'both' }}></div>
+                     </div>
+                     <div style={{ paddingLeft: '20px', textTransform: 'uppercase', paddingBottom: '10px' }}>obo {dep || '[DEPENDENT]'}</div>
+                  </React.Fragment>
+                ))}
+             </>
+           )}
+        </div>
 
-        <p style={{ fontWeight: 'bold', textTransform: 'uppercase', margin: '15px 0' }}>AND</p>
+        <p style={{ fontWeight: 'bold', textTransform: 'uppercase', margin: '30px 0' }}>AND</p>
         
-        <table style={{ width: '100%', marginBottom: form.link ? '5px' : '30px', borderCollapse: 'collapse' }}>
-          <tbody>
-            <tr>
-              <td style={{ width: '70%', fontWeight: 'bold', textTransform: 'uppercase', verticalAlign: 'bottom' }}>{form.defendent.toUpperCase()}</td>
-              <td style={{ width: '30%', fontWeight: 'bold', textTransform: 'uppercase', textAlign: 'right', verticalAlign: 'bottom' }}>DEFENDANT</td>
-            </tr>
-          </tbody>
-        </table>
+        <div style={{ marginBottom: form.link ? '5px' : '30px' }}>
+          <span style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>{form.defendent.toUpperCase()}</span>
+          <span style={{ fontWeight: 'bold', textTransform: 'uppercase', float: 'right' }}>DEFENDANT</span>
+          <div style={{ clear: 'both' }}></div>
+        </div>
 
         {/* GUARDIAN: Link Number repositioned below Defendant */}
         {form.link && (
@@ -539,8 +531,10 @@ export default function AffidavitAutomation() {
         <div style={{ marginTop: '60px' }}>
            {docCategory === 'sworn' ? (
               <>
-                <div style={{ width: '250px', borderTop: '1.5px solid black', paddingTop: '10px', marginBottom: '30px' }}>
-                   <p style={{ fontWeight: 'bold', margin: 0 }}>N WAISBERG</p>
+                <div style={{ textAlign: 'right', marginBottom: '30px' }}>
+                  <div style={{ display: 'inline-block', width: '200px', borderTop: '1.5px solid black', paddingTop: '10px', textAlign: 'left' }}>
+                     <p style={{ fontWeight: 'bold', margin: 0, textTransform: 'uppercase' }}>NAMIR WAISBERG / DEPONENT</p>
+                  </div>
                 </div>
                 <p style={{ marginBottom: '20px' }}>
                   Signed at <strong>SANDTON</strong> on <strong>{formatOrdinals(signDate)}</strong> after the deponent has declared:
@@ -554,8 +548,10 @@ export default function AffidavitAutomation() {
               </>
            ) : (
               <>
-                <div style={{ width: '250px', borderTop: '1.5px solid black', paddingTop: '10px', marginBottom: '40px' }}>
-                   <p style={{ fontWeight: 'bold', margin: 0, textTransform: 'uppercase' }}>NAMIR WAISBERG {docCategory !== 'confirmatory' && docCategory !== 'lieu' ? '(DEPONENT)' : ''}</p>
+                <div style={{ textAlign: 'right', marginBottom: '40px' }}>
+                  <div style={{ display: 'inline-block', width: '200px', borderTop: '1.5px solid black', paddingTop: '10px', textAlign: 'left' }}>
+                     <p style={{ fontWeight: 'bold', margin: 0, textTransform: 'uppercase' }}>NAMIR WAISBERG / DEPONENT</p>
+                  </div>
                 </div>
                 
                 {docCategory === 'confirmatory' || docCategory === 'lieu' ? (
