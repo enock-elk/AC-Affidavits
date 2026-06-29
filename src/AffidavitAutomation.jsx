@@ -256,31 +256,30 @@ export default function AffidavitAutomation() {
     exportToWord();
     setShowFeedbackModal(false);
 
-    // 2. Transmit to Google if not skipped
-    if (!skipped && feedbackText.trim()) {
-      try {
-        setIsSubmittingFeedback(true);
-        const payload = {
-          action: 'LOG_FEEDBACK',
-          userName: localStorage.getItem('currentUser') || 'Unknown User',
-          // GUARDIAN: Smart Case Name Formatting (Omits case number if empty)
-          caseName: `${form.plaintiff || '[PLAINTIFF]'} v ${form.defendent || '[DEFENDANT]'}${form.case ? ` (Case: ${form.case})` : ''}`,
-          feedback: feedbackText.trim()
-        };
-        
-        // Fire and forget POST request
-        await fetch(GOOGLE_API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(payload)
-        });
-      } catch (err) {
-        console.error("Feedback sync failed", err);
-      } finally {
-        setIsSubmittingFeedback(false);
-        setFeedbackText('');
-      }
-    } else {
+    // 2. Always transmit to Google for Audit Trail
+    const finalFeedback = skipped ? "Feedback Skipped" : feedbackText.trim();
+
+    try {
+      if (!skipped) setIsSubmittingFeedback(true);
+      
+      const payload = {
+        action: 'LOG_FEEDBACK',
+        userName: localStorage.getItem('currentUser') || 'Unknown User',
+        // GUARDIAN: Smart Case Name Formatting (Omits case number if empty)
+        caseName: `${form.plaintiff || '[PLAINTIFF]'} v ${form.defendent || '[DEFENDANT]'}${form.case ? ` (Case: ${form.case})` : ''}`,
+        feedback: finalFeedback
+      };
+      
+      // Fire and forget POST request
+      await fetch(GOOGLE_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+    } catch (err) {
+      console.error("Feedback/Audit sync failed", err);
+    } finally {
+      setIsSubmittingFeedback(false);
       setFeedbackText('');
     }
   };
