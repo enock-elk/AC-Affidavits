@@ -220,16 +220,31 @@ export default function AffidavitAutomation() {
   }, [rules, activeFirm, selectedFirmId]);
 
   // --- 3. EXPORT HELPERS ---
-  const copyToClipboard = () => {
-    const node = document.getElementById('doc-preview');
-    const selection = window.getSelection();
-    const range = document.createRange();
-    range.selectNodeContents(node);
-    selection.removeAllRanges();
-    selection.addRange(range);
-    
-    document.execCommand('copy');
-    selection.removeAllRanges();
+  const copyToClipboard = async () => {
+    const content = document.getElementById('doc-preview').innerHTML;
+    const preHtml = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><style>body { font-family: Arial, sans-serif; font-size: 12pt; }</style></head><body>`;
+    const postHtml = `</body></html>`;
+    const html = preHtml + content + postHtml;
+
+    try {
+      const blobHtml = new Blob([html], { type: "text/html" });
+      const blobText = new Blob([document.getElementById('doc-preview').innerText], { type: "text/plain" });
+      const data = [new ClipboardItem({
+        ["text/plain"]: blobText,
+        ["text/html"]: blobHtml,
+      })];
+      await navigator.clipboard.write(data);
+    } catch (err) {
+      // Fallback for older browsers
+      const node = document.getElementById('doc-preview');
+      const selection = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      document.execCommand('copy');
+      selection.removeAllRanges();
+    }
   };
 
   const exportToWord = () => {
@@ -297,24 +312,24 @@ export default function AffidavitAutomation() {
     // GUARDIAN: Utilizing strict `<ol>` lists for Word native numbering
     if (docCategory === 'expert') {
        return (
-         <ol style={{ listStyleType: 'decimal', paddingLeft: '40px', margin: '0 0 20px 0', textAlign: 'justify' }}>
-           <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>I am a major male South African Actuary and practicing as such. I am the Director of Actuary Consulting based in Atrium on 5th Building, Corner 5th &amp; Maude Street, Sandown, Sandton, Johannesburg.</li>
-           <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>The facts herein contained, save where otherwise stated or indicated, are within my own knowledge and are, to the best of my knowledge and belief, both true and correct.</li>
-           <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>I confirm that I compiled an {reportType} for {subjectName}. I confirm the contents of my {reportType} and the opinion raised therein by myself as to the best of my knowledge, true and correct.</li>
-           <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>I confirm that, on {reportDate}, I compiled the {reportType} for the loss of earnings emanating from the injuries caused by a motor vehicle collision, which occurred on or about {accDate}.</li>
+         <ol style={{ listStyleType: 'decimal', paddingLeft: '40px', margin: '0 0 15px 0', textAlign: 'justify' }}>
+           <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>I am a major male South African Actuary and practicing as such. I am the Director of Actuary Consulting based in Atrium on 5th Building, Corner 5th &amp; Maude Street, Sandown, Sandton, Johannesburg.</li>
+           <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>The facts herein contained, save where otherwise stated or indicated, are within my own knowledge and are, to the best of my knowledge and belief, both true and correct.</li>
+           <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>I confirm that I compiled an {reportType} for {subjectName}. I confirm the contents of my {reportType} and the opinion raised therein by myself as to the best of my knowledge, true and correct.</li>
+           <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>I confirm that, on {reportDate}, I compiled the {reportType} for the loss of earnings emanating from the injuries caused by a motor vehicle collision, which occurred on or about {accDate}.</li>
            {complexity === 'simple' ? (
-             <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>This report represents a single-scenario calculation applying the standard Road Accident Fund cap.</li>
+             <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>This report represents a single-scenario calculation applying the standard Road Accident Fund cap.</li>
            ) : (
              <>
-               <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>This report involves a multi-scenario calculation (Scenario 1 vs Scenario 2) and compares complex contingencies regarding the claimant's pre-morbid career trajectory and collateral benefits.</li>
-               <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>Furthermore, this report outlines the complex comparative figures for both "Capped" and "Uncapped" loss of earnings, which have been fully detailed in the annexures of the main report.</li>
+               <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>This report involves a multi-scenario calculation (Scenario 1 vs Scenario 2) and compares complex contingencies regarding the claimant's pre-morbid career trajectory and collateral benefits.</li>
+               <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>Furthermore, this report outlines the complex comparative figures for both "Capped" and "Uncapped" loss of earnings, which have been fully detailed in the annexures of the main report.</li>
              </>
            )}
            {rules.quals === 'Long' ? (
-             <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>
+             <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>
                I have the following experience and qualifications:
                {/* GUARDIAN: Removed manual hyphens and set listStyleType to 'disc' to let MS Word generate single clean bullets */}
-               <ul style={{ textAlign: 'left', paddingLeft: '20px', margin: '10px 0 20px 0', listStyleType: 'disc' }}>
+               <ul style={{ textAlign: 'left', paddingLeft: '20px', margin: '10px 0 15px 0', listStyleType: 'disc' }}>
                  <li style={{ marginBottom: '5px' }}>18 years of experience as a Qualified Actuary.</li>
                  <li style={{ marginBottom: '5px' }}>Record for Fastest Qualified Actuary in South Africa.</li>
                  <li style={{ marginBottom: '5px' }}>BEconSc (Cum Laude) (Wits) - Actuarial Science &amp; Mathematical Statistics.</li>
@@ -326,19 +341,19 @@ export default function AffidavitAutomation() {
                </ul>
              </li>
            ) : (
-             <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>I hereby confirm as true and correct my qualifications and further details as appear from the summary of my curriculum vitae found within my {reportType}.<br/>I am a Fellow of the Actuarial Society of South Africa, RSP181/2023.</li>
+             <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>I hereby confirm as true and correct my qualifications and further details as appear from the summary of my curriculum vitae found within my {reportType}.<br/>I am a Fellow of the Actuarial Society of South Africa, RSP181/2023.</li>
            )}
-           <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>The said {reportType} is not attached to this affidavit, so as to avoid the unnecessary prolixity of papers.</li>
+           <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>The said {reportType} is not attached to this affidavit, so as to avoid the unnecessary prolixity of papers.</li>
          </ol>
        );
     } else if (docCategory === 'sworn') {
        return (
-         <ol style={{ listStyleType: 'decimal', paddingLeft: '40px', margin: '0 0 20px 0', textAlign: 'justify' }}>
-          <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>
+         <ol style={{ listStyleType: 'decimal', paddingLeft: '40px', margin: '0 0 15px 0', textAlign: 'justify' }}>
+          <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>
             {rules.quals === 'Long' ? (
               <>
                 I am an adult male Actuary practising as such at Actuary Consulting with the following experience and qualifications:
-                <ul style={{ textAlign: 'left', paddingLeft: '20px', margin: '10px 0 20px 0', listStyleType: 'disc' }}>
+                <ul style={{ textAlign: 'left', paddingLeft: '20px', margin: '10px 0 15px 0', listStyleType: 'disc' }}>
                   <li style={{ marginBottom: '5px' }}>18 years of experience as a Qualified Actuary.</li>
                   <li style={{ marginBottom: '5px' }}>Record for Fastest Qualified Actuary in South Africa.</li>
                   <li style={{ marginBottom: '5px' }}>BEconSc (Cum Laude) (Wits) - Actuarial Science &amp; Mathematical Statistics.</li>
@@ -352,49 +367,49 @@ export default function AffidavitAutomation() {
               <>I am an adult male Actuary practising as such at Actuary Consulting situated at Atrium on 5th Building, Corner 5th &amp; Maude Street, Sandown, Sandton, Johannesburg.</>
             )}
           </li>
-          <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>The facts contained herein fall within my personal knowledge unless expressly indicated to the contrary and are true and correct.</li>
-          <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>I hereby confirm that the contents of the {reportType} of {subjectName} dated {reportDate}, and the findings therein. I am totally able and competent to make such findings because of my experience and qualifications combined.</li>
+          <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>The facts contained herein fall within my personal knowledge unless expressly indicated to the contrary and are true and correct.</li>
+          <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>I hereby confirm that the contents of the {reportType} of {subjectName} dated {reportDate}, and the findings therein. I am totally able and competent to make such findings because of my experience and qualifications combined.</li>
          </ol>
        );
     } else if (docCategory === 'confirmatory') {
        return (
-         <ol style={{ listStyleType: 'decimal', paddingLeft: '40px', margin: '0 0 20px 0', textAlign: 'justify' }}>
-          <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>I am an adult male Actuary, and I am currently practicing under the name and style of Actuary Consulting situated at Atrium on 5th Building, Corner 5th &amp; Maude Street, Sandown, Sandton, Johannesburg.</li>
-          <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>The facts deposed to herein are, unless the context indicates otherwise, within my personal knowledge and belief and are both true and correct.</li>
-          <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>I was requested by the offices of {activeFirm.firm} to provide a certificate of value for Loss of Earnings for {subjectName} following his involvement in a motor vehicle accident on the {accDate}.</li>
-          <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>The purpose of the {reportType} was to establish whether or not his subsequent injuries due to the motor vehicle caused financial loss to his dependents.</li>
-          <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>In executing my mandate, I had regard to the proof of past and future earnings of {subjectName} had the Motor vehicle Accident not occurred, and I confirm that the plaintiff has suffered a past loss and shall continue to suffer future loss owing to the aftermath of the accident. The total loss of earnings amounted to R {calcAmount || '[AMOUNT]'}</li>
-          <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>I produced an {reportType} of the value of my findings on the {reportDate}.</li>
-          <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>I stand by the findings I made in the {reportType} and will avail myself should oral testimony herein be required.<br/><br/>That is all I wish to state.</li>
+         <ol style={{ listStyleType: 'decimal', paddingLeft: '40px', margin: '0 0 15px 0', textAlign: 'justify' }}>
+          <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>I am an adult male Actuary, and I am currently practicing under the name and style of Actuary Consulting situated at Atrium on 5th Building, Corner 5th &amp; Maude Street, Sandown, Sandton, Johannesburg.</li>
+          <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>The facts deposed to herein are, unless the context indicates otherwise, within my personal knowledge and belief and are both true and correct.</li>
+          <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>I was requested by the offices of {activeFirm.firm} to provide a certificate of value for Loss of Earnings for {subjectName} following his involvement in a motor vehicle accident on the {accDate}.</li>
+          <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>The purpose of the {reportType} was to establish whether or not his subsequent injuries due to the motor vehicle caused financial loss to his dependents.</li>
+          <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>In executing my mandate, I had regard to the proof of past and future earnings of {subjectName} had the Motor vehicle Accident not occurred, and I confirm that the plaintiff has suffered a past loss and shall continue to suffer future loss owing to the aftermath of the accident. The total loss of earnings amounted to R {calcAmount || '[AMOUNT]'}</li>
+          <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>I produced an {reportType} of the value of my findings on the {reportDate}.</li>
+          <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>I stand by the findings I made in the {reportType} and will avail myself should oral testimony herein be required.<br/><br/>That is all I wish to state.</li>
          </ol>
        );
     } else if (docCategory === 'lieu') {
        return (
          <>
-          <p style={{ marginBottom: '20px' }}>I am an adult male practicing as an Actuary in a private practice, practicing under the name and style of Actuary Consulting practicing at Atrium on 5th Building, Corner 5th &amp; Maude Street, Sandown, Sandton, Johannesburg.</p>
-          <p style={{ marginBottom: '20px' }}>I confirm that the facts herein contained in this affidavit are true and correct and are within my knowledge, save where otherwise stated.</p>
-          <p style={{ marginBottom: '20px' }}>On {reportDate}, I was requested by {activeFirm.firm} to compile an {reportType} on behalf of {subjectName}, to calculate pre- and post-accident earnings.</p>
-          <p style={{ marginBottom: '20px' }}>In my {reportType}, I made certain factual assumptions based on the facts furnished to me, and I also made certain actuarial assumptions which are widely accepted in the actuarial industry.</p>
-          <p style={{ marginBottom: '20px' }}>I have drawn an {reportType} dated {reportDate}, which is not attached to this affidavit; as I am informed it is uploaded on Case lines and thus, I have not attached the same, to avoid the unnecessary prolixity of papers.</p>
-          <p style={{ marginBottom: '20px' }}>In regard to the above, may it please the Honourable Court that the said {reportType} be incorporated herein by reference.</p>
-          <p style={{ marginBottom: '20px' }}>I confirm the correctness of the contents of my aforementioned {reportType}.</p>
+          <p style={{ marginBottom: '15px' }}>I am an adult male practicing as an Actuary in a private practice, practicing under the name and style of Actuary Consulting practicing at Atrium on 5th Building, Corner 5th &amp; Maude Street, Sandown, Sandton, Johannesburg.</p>
+          <p style={{ marginBottom: '15px' }}>I confirm that the facts herein contained in this affidavit are true and correct and are within my knowledge, save where otherwise stated.</p>
+          <p style={{ marginBottom: '15px' }}>On {reportDate}, I was requested by {activeFirm.firm} to compile an {reportType} on behalf of {subjectName}, to calculate pre- and post-accident earnings.</p>
+          <p style={{ marginBottom: '15px' }}>In my {reportType}, I made certain factual assumptions based on the facts furnished to me, and I also made certain actuarial assumptions which are widely accepted in the actuarial industry.</p>
+          <p style={{ marginBottom: '15px' }}>I have drawn an {reportType} dated {reportDate}, which is not attached to this affidavit; as I am informed it is uploaded on Case lines and thus, I have not attached the same, to avoid the unnecessary prolixity of papers.</p>
+          <p style={{ marginBottom: '15px' }}>In regard to the above, may it please the Honourable Court that the said {reportType} be incorporated herein by reference.</p>
+          <p style={{ marginBottom: '15px' }}>I confirm the correctness of the contents of my aforementioned {reportType}.</p>
          </>
        );
     } else if (docCategory === 'supporting') {
        return (
-         <ol style={{ listStyleType: 'decimal', paddingLeft: '40px', margin: '0 0 20px 0', textAlign: 'justify' }}>
-          <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>I am an adult male Actuary, practicing at Atrium on 5th Building, Corner 5th &amp; Maude Street, Sandown, Sandton, Johannesburg. I am capable of deposing to this affidavit, the contents of which are true and correct to the best of my knowledge.</li>
-          <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>The facts contained herein are within my personal knowledge, except where the context indicates otherwise, and are true and correct.</li>
-          <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>I confirm the contents of my {reportType} contained in the Expert Reports bundle filed in this matter and the opinions expressed therein by me for the above Plaintiff, {subjectName}.</li>
+         <ol style={{ listStyleType: 'decimal', paddingLeft: '40px', margin: '0 0 15px 0', textAlign: 'justify' }}>
+          <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>I am an adult male Actuary, practicing at Atrium on 5th Building, Corner 5th &amp; Maude Street, Sandown, Sandton, Johannesburg. I am capable of deposing to this affidavit, the contents of which are true and correct to the best of my knowledge.</li>
+          <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>The facts contained herein are within my personal knowledge, except where the context indicates otherwise, and are true and correct.</li>
+          <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>I confirm the contents of my {reportType} contained in the Expert Reports bundle filed in this matter and the opinions expressed therein by me for the above Plaintiff, {subjectName}.</li>
          </ol>
        );
     } else if (docCategory === 'los') {
        return (
-         <ol style={{ listStyleType: 'decimal', paddingLeft: '40px', margin: '0 0 20px 0', textAlign: 'justify' }}>
-           <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>I am an adult Actuary, founder and Managing Director at Actuary Consulting situated at Atrium on 5th Building Corner 5th &amp; Maude Street, Sandown, Sandton, Johannesburg. The facts herein contained are within my personal Knowledge and are both true and correct, unless the context indicates otherwise.</li>
-           <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>
+         <ol style={{ listStyleType: 'decimal', paddingLeft: '40px', margin: '0 0 15px 0', textAlign: 'justify' }}>
+           <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>I am an adult Actuary, founder and Managing Director at Actuary Consulting situated at Atrium on 5th Building Corner 5th &amp; Maude Street, Sandown, Sandton, Johannesburg. The facts herein contained are within my personal Knowledge and are both true and correct, unless the context indicates otherwise.</li>
+           <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>
              I have the following experience and qualifications:
-             <ul style={{ textAlign: 'left', paddingLeft: '20px', margin: '10px 0 20px 0', listStyleType: 'disc' }}>
+             <ul style={{ textAlign: 'left', paddingLeft: '20px', margin: '10px 0 15px 0', listStyleType: 'disc' }}>
                 <li style={{ marginBottom: '5px' }}>18 years of experience as a Qualified Actuary.</li>
                 <li style={{ marginBottom: '5px' }}>Record for Fastest Qualified Actuary in South Africa.</li>
                 <li style={{ marginBottom: '5px' }}>BEconSc (Cum Laude) (Wits) - Actuarial Science &amp; Mathematical Statistics.</li>
@@ -404,10 +419,10 @@ export default function AffidavitAutomation() {
                 <li style={{ marginBottom: '5px' }}>Chartered Financial Analyst (CFA) Charterholder (CFA Institute).</li>
              </ul>
            </li>
-           <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>Actuary Consulting has been instructed to provide a Capitalised Present Value amount of the Loss of Support by the dependents of the late {subjectName}, as a result of his death due to a motor vehicle accident that occurred on {accDate}.</li>
-           <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>The resultant Capitalised Present Value has been determined as of {reportDate} (Calculation Date).</li>
-           <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>I subsequently prepared an {reportType} dated {reportDate}, quantifying the financial impact, including loss of support, future related expenses (where applicable), and contingencies, based on the expert evidence provided.</li>
-           <li style={{ marginBottom: '20px', paddingLeft: '10px' }}>I confirm that the contents of the said {reportType} represent my professional opinion, calculated in accordance with accepted actuarial principles and practices, and I submit same to the honourable court for its consideration.</li>
+           <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>Actuary Consulting has been instructed to provide a Capitalised Present Value amount of the Loss of Support by the dependents of the late {subjectName}, as a result of his death due to a motor vehicle accident that occurred on {accDate}.</li>
+           <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>The resultant Capitalised Present Value has been determined as of {reportDate} (Calculation Date).</li>
+           <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>I subsequently prepared an {reportType} dated {reportDate}, quantifying the financial impact, including loss of support, future related expenses (where applicable), and contingencies, based on the expert evidence provided.</li>
+           <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>I confirm that the contents of the said {reportType} represent my professional opinion, calculated in accordance with accepted actuarial principles and practices, and I submit same to the honourable court for its consideration.</li>
         </ol>
        );
     }
@@ -427,7 +442,7 @@ export default function AffidavitAutomation() {
       'Expert Affidavit';
 
     return (
-      <div style={{ fontFamily: 'Arial, sans-serif', fontSize: '12pt', lineHeight: '1.5', color: '#000' }}>
+      <div style={{ fontFamily: 'Arial, sans-serif', fontSize: '12pt', lineHeight: '1.15', color: '#000' }}>
         
         {/* Cover Page */}
         {rules.cover && (
@@ -445,8 +460,8 @@ export default function AffidavitAutomation() {
 
         {/* Document Header */}
         <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-          <p style={{ fontWeight: 'bold', textTransform: 'uppercase', margin: 0 }}>IN THE {form.court}</p>
-          <p style={{ fontWeight: 'bold', textTransform: 'uppercase', margin: 0 }}>{form.div}</p>
+          <p style={{ fontWeight: 'bold', margin: 0 }}>IN THE {form.court.toUpperCase()}</p>
+          <p style={{ fontWeight: 'bold', margin: 0 }}>{form.div.toUpperCase()}</p>
         </div>
 
         {/* GUARDIAN: Right Aligned Case Number */}
@@ -457,42 +472,48 @@ export default function AffidavitAutomation() {
         {/* Parties Block */}
         <p style={{ marginBottom: '15px' }}>In the matter between:</p>
         
-        <div style={{ marginBottom: '15px' }}>
-           {(!rules.obo || dependents.length === 0) ? (
-             <div>
-               <span style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>{p}</span>
-               <span style={{ fontWeight: 'bold', textTransform: 'uppercase', float: 'right' }}>{docCategory === 'los' ? 'APPLICANT' : 'PLAINTIFF'}</span>
-               <div style={{ clear: 'both' }}></div>
-             </div>
-           ) : (
-             <>
-                <div>
-                   <span style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>{p}</span>
-                   <span style={{ fontWeight: 'bold', textTransform: 'uppercase', float: 'right' }}>1ST {docCategory === 'los' ? 'APPLICANT' : 'PLAINTIFF'}</span>
-                   <div style={{ clear: 'both' }}></div>
-                </div>
-                <div style={{ paddingLeft: '20px', textTransform: 'uppercase', paddingBottom: '10px' }}>obo {dependents[0] || '[DEPENDENT]'}</div>
-                {dependents.slice(1).map((dep, idx) => (
-                  <React.Fragment key={idx}>
-                     <div style={{ paddingTop: '10px' }}>
-                        <span style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>{p}</span>
-                        <span style={{ fontWeight: 'bold', textTransform: 'uppercase', float: 'right' }}>{idx + 2}{idx === 0 ? 'ND' : idx === 1 ? 'RD' : 'TH'} {docCategory === 'los' ? 'APPLICANT' : 'PLAINTIFF'}</span>
-                        <div style={{ clear: 'both' }}></div>
-                     </div>
-                     <div style={{ paddingLeft: '20px', textTransform: 'uppercase', paddingBottom: '10px' }}>obo {dep || '[DEPENDENT]'}</div>
-                  </React.Fragment>
-                ))}
-             </>
-           )}
-        </div>
+        <table width="100%" style={{ width: '100%', marginBottom: '15px', borderCollapse: 'collapse' }}>
+          <tbody>
+             {(!rules.obo || dependents.length === 0) ? (
+               <tr>
+                 <td width="75%" style={{ width: '75%', fontWeight: 'bold', textTransform: 'uppercase', verticalAlign: 'bottom' }}>{p}</td>
+                 <td width="25%" style={{ width: '25%', fontWeight: 'bold', textTransform: 'uppercase', textAlign: 'right', verticalAlign: 'bottom' }}>{docCategory === 'los' ? 'APPLICANT' : 'PLAINTIFF'}</td>
+               </tr>
+             ) : (
+               <>
+                  <tr>
+                     <td width="75%" style={{ width: '75%', fontWeight: 'bold', textTransform: 'uppercase', verticalAlign: 'bottom' }}>{p}</td>
+                     <td width="25%" style={{ width: '25%', fontWeight: 'bold', textTransform: 'uppercase', textAlign: 'right', verticalAlign: 'bottom' }}>1ST {docCategory === 'los' ? 'APPLICANT' : 'PLAINTIFF'}</td>
+                  </tr>
+                  <tr>
+                     <td colSpan="2" style={{ paddingLeft: '20px', textTransform: 'uppercase', paddingBottom: '10px' }}>obo {dependents[0] || '[DEPENDENT]'}</td>
+                  </tr>
+                  {dependents.slice(1).map((dep, idx) => (
+                    <React.Fragment key={idx}>
+                      <tr>
+                         <td width="75%" style={{ width: '75%', fontWeight: 'bold', textTransform: 'uppercase', verticalAlign: 'bottom', paddingTop: '10px' }}>{p}</td>
+                         <td width="25%" style={{ width: '25%', fontWeight: 'bold', textTransform: 'uppercase', textAlign: 'right', verticalAlign: 'bottom', paddingTop: '10px' }}>{idx + 2}{idx === 0 ? 'ND' : idx === 1 ? 'RD' : 'TH'} {docCategory === 'los' ? 'APPLICANT' : 'PLAINTIFF'}</td>
+                      </tr>
+                      <tr>
+                         <td colSpan="2" style={{ paddingLeft: '20px', textTransform: 'uppercase', paddingBottom: '10px' }}>obo {dep || '[DEPENDENT]'}</td>
+                      </tr>
+                    </React.Fragment>
+                  ))}
+               </>
+             )}
+          </tbody>
+        </table>
 
         <p style={{ fontWeight: 'bold', textTransform: 'uppercase', margin: '30px 0' }}>AND</p>
         
-        <div style={{ marginBottom: form.link ? '5px' : '30px' }}>
-          <span style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>{form.defendent.toUpperCase()}</span>
-          <span style={{ fontWeight: 'bold', textTransform: 'uppercase', float: 'right' }}>DEFENDANT</span>
-          <div style={{ clear: 'both' }}></div>
-        </div>
+        <table width="100%" style={{ width: '100%', marginBottom: form.link ? '5px' : '30px', borderCollapse: 'collapse' }}>
+          <tbody>
+            <tr>
+              <td width="75%" style={{ width: '75%', fontWeight: 'bold', textTransform: 'uppercase', verticalAlign: 'bottom' }}>{form.defendent.toUpperCase()}</td>
+              <td width="25%" style={{ width: '25%', fontWeight: 'bold', textTransform: 'uppercase', textAlign: 'right', verticalAlign: 'bottom' }}>DEFENDANT</td>
+            </tr>
+          </tbody>
+        </table>
 
         {/* GUARDIAN: Link Number repositioned below Defendant */}
         {form.link && (
@@ -514,11 +535,11 @@ export default function AffidavitAutomation() {
         </div>
         
         {docCategory === 'sworn' ? (
-          <p style={{ marginBottom: '20px' }}>hereby state under oath as follows:</p>
+          <p style={{ marginBottom: '15px' }}>hereby state under oath as follows:</p>
         ) : docCategory === 'confirmatory' || docCategory === 'lieu' ? (
-          <p style={{ marginBottom: '20px' }}>do hereby make oath and say that:</p>
+          <p style={{ marginBottom: '15px' }}>do hereby make oath and say that:</p>
         ) : (
-          <p style={{ marginBottom: '20px' }}>do hereby make oath and state that:</p>
+          <p style={{ marginBottom: '15px' }}>do hereby make oath and state that:</p>
         )}
 
         {/* Content Body */}
@@ -526,16 +547,25 @@ export default function AffidavitAutomation() {
            {renderAffidavitContent()}
         </div>
 
+        {/* GUARDIAN: Hard paragraph break to prevent Google Docs from continuing the numbered list */}
+        <p>&nbsp;</p>
+
         {/* Signature Block */}
         <div style={{ marginTop: '60px' }}>
            {docCategory === 'sworn' ? (
               <>
-                <div style={{ textAlign: 'right', marginBottom: '30px' }}>
-                  <div style={{ display: 'inline-block', width: '200px', borderTop: '1.5px solid black', paddingTop: '10px', textAlign: 'left' }}>
-                     <p style={{ fontWeight: 'bold', margin: 0, textTransform: 'uppercase' }}>NAMIR WAISBERG / DEPONENT</p>
-                  </div>
-                </div>
-                <p style={{ marginBottom: '20px' }}>
+                <table width="100%" style={{ width: '100%', marginBottom: '30px', borderCollapse: 'collapse' }}>
+                  <tbody>
+                    <tr>
+                      <td width="50%" style={{ width: '50%' }}></td>
+                      <td width="50%" style={{ width: '50%', textAlign: 'left', verticalAlign: 'bottom' }}>
+                        <p style={{ margin: '0 0 5px 0' }}>______________________________________</p>
+                        <p style={{ fontWeight: 'bold', margin: 0 }}>N WAISBERG</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p style={{ marginBottom: '15px' }}>
                   Signed at <strong>SANDTON</strong> on <strong>{formatOrdinals(signDate)}</strong> after the deponent has declared:
                 </p>
                 {/* GUARDIAN: Word native alphabet list */}
@@ -547,11 +577,17 @@ export default function AffidavitAutomation() {
               </>
            ) : (
               <>
-                <div style={{ textAlign: 'right', marginBottom: '40px' }}>
-                  <div style={{ display: 'inline-block', width: '200px', borderTop: '1.5px solid black', paddingTop: '10px', textAlign: 'left' }}>
-                     <p style={{ fontWeight: 'bold', margin: 0, textTransform: 'uppercase' }}>NAMIR WAISBERG / DEPONENT</p>
-                  </div>
-                </div>
+                <table width="100%" style={{ width: '100%', marginBottom: '40px', borderCollapse: 'collapse' }}>
+                  <tbody>
+                    <tr>
+                      <td width="50%" style={{ width: '50%' }}></td>
+                      <td width="50%" style={{ width: '50%', textAlign: 'left', verticalAlign: 'bottom' }}>
+                        <p style={{ margin: '0 0 5px 0' }}>______________________________________</p>
+                        <p style={{ fontWeight: 'bold', margin: 0, textTransform: 'uppercase' }}>NAMIR WAISBERG {docCategory !== 'confirmatory' && docCategory !== 'lieu' ? '/ DEPONENT' : ''}</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
                 
                 {docCategory === 'confirmatory' || docCategory === 'lieu' ? (
                   <p style={{ marginBottom: '40px', textAlign: 'justify' }}>
