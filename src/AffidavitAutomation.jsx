@@ -92,33 +92,31 @@ export default function AffidavitAutomation() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const isDragging = useRef(false);
 
-  // GUARDIAN: Feedback Modal State
-  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  // GUARDIAN: Telemetry State (Silent Audit)
   const [feedbackText, setFeedbackText] = useState('');
-  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
 
   // --- 1. INITIALIZATION ---
   useEffect(() => {
+    const fetchDatabase = async () => {
+      try {
+        const response = await fetch(GOOGLE_API_URL);
+        if (!response.ok) throw new Error("Network response not ok");
+        const data = await response.json();
+        const db = [
+          { id: 'custom', firm: '-- Custom / Override --', attorney: '', rules: { quals: 'Long', linkNo: false, cover: false, obo: false, preSign: false } },
+          ...data
+        ];
+        setDatabase(db);
+      } catch (error) {
+        console.warn("DB Fetch failed (Likely CORS in dev). Injecting FALLBACK_DB.", error);
+        setDatabase(FALLBACK_DB); // Inject offline fallback data
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchDatabase();
   }, []);
-
-  const fetchDatabase = async () => {
-    try {
-      const response = await fetch(GOOGLE_API_URL);
-      if (!response.ok) throw new Error("Network response not ok");
-      const data = await response.json();
-      const db = [
-        { id: 'custom', firm: '-- Custom / Override --', attorney: '', rules: { quals: 'Long', linkNo: false, cover: false, obo: false, preSign: false } },
-        ...data
-      ];
-      setDatabase(db);
-    } catch (error) {
-      console.warn("DB Fetch failed (Likely CORS in dev). Injecting FALLBACK_DB.", error);
-      setDatabase(FALLBACK_DB); // Inject offline fallback data
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // --- GUARDIAN: CLICK OUTSIDE LISTENER FOR DROPDOWN ---
   useEffect(() => {
@@ -209,8 +207,14 @@ export default function AffidavitAutomation() {
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ firm: activeFirm.firm, rules })
       });
-      activeFirm.rules = { ...rules };
-    } catch (err) { console.error(err); }
+      setDatabase(prev =>
+        prev.map(firm =>
+          firm.id === selectedFirmId ? { ...firm, rules: { ...rules } } : firm
+        )
+      );
+    } catch (err) {
+      console.error(err);
+    }
     setSyncing(false);
   };
 
@@ -234,7 +238,7 @@ export default function AffidavitAutomation() {
         ["text/html"]: blobHtml,
       })];
       await navigator.clipboard.write(data);
-    } catch (err) {
+    } catch {
       // Fallback for older browsers
       const node = document.getElementById('doc-preview');
       const selection = window.getSelection();
@@ -269,14 +273,11 @@ export default function AffidavitAutomation() {
   const handleFeedbackSubmit = async (skipped = false) => {
     // 1. Download immediately to avoid blocking the user's workflow
     exportToWord();
-    setShowFeedbackModal(false);
 
     // 2. Always transmit to Google for Audit Trail
     const finalFeedback = skipped ? "Feedback Skipped" : feedbackText.trim();
 
     try {
-      if (!skipped) setIsSubmittingFeedback(true);
-      
       const payload = {
         action: 'LOG_FEEDBACK',
         userName: localStorage.getItem('currentUser') || 'Unknown User',
@@ -294,13 +295,12 @@ export default function AffidavitAutomation() {
     } catch (err) {
       console.error("Feedback/Audit sync failed", err);
     } finally {
-      setIsSubmittingFeedback(false);
       setFeedbackText('');
     }
   };
 
   // --- 4. TEXT CONTENT GENERATOR ---
-  const renderAffidavitContent = () => {
+  const renderAffidavitContent = useCallback(() => {
     const reportType = isRecalc ? "Amended Actuarial Report" : "Actuarial Report";
     const reportDate = form.compDate ? form.compDate : '______________________';
     const accDate = form.accDate ? form.accDate : '______________________';
@@ -425,8 +425,17 @@ export default function AffidavitAutomation() {
            <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>I confirm that the contents of the said {reportType} represent my professional opinion, calculated in accordance with accepted actuarial principles and practices, and I submit same to the honourable court for its consideration.</li>
         </ol>
        );
+    } else if (docCategory === 'mphela') {
+       return (
+         <>
+          <p style={{ marginBottom: '15px', textAlign: 'justify' }}>I am an Actuary and have compiled the {reportType} dated {reportDate} in the action of {subjectName} for the Plaintiff's Attorney, Mphela &amp; Associates Attorneys Inc.</p>
+          <p style={{ marginBottom: '15px', textAlign: 'justify' }}>I confirm the {reportType} to be true and correct.</p>
+          <p style={{ marginBottom: '15px', textAlign: 'justify' }}>I am a Fellow of the Actuarial Society of South Africa, RSP181/2023.</p>
+          <p style={{ marginBottom: '15px', textAlign: 'justify' }}>The {reportType} dated {reportDate} relating to the Plaintiff's claim against the Road Accident Fund (RAF) was prepared on the data, assumptions and methodology as detailed, and it constitutes my expert opinion.</p>
+         </>
+       );
     }
-  };
+  }, [form, rules, activeFirm, complexity, docCategory, isRecalc, calcAmount, reportSubject]);
 
   // --- 5. PREVIEW ENGINE (MS Word Compatible) ---
   const generatedDocument = useMemo(() => {
@@ -617,7 +626,7 @@ export default function AffidavitAutomation() {
         </div>
       </div>
     );
-  }, [form, rules, activeFirm, complexity, dependents, docCategory, isRecalc, calcAmount, reportSubject, signDate]);
+  }, [form, rules, activeFirm, dependents, docCategory, signDate, renderAffidavitContent]);
 
   return (
     <div className="h-full flex overflow-hidden bg-slate-50 dark:bg-slate-900/50">
@@ -739,6 +748,7 @@ export default function AffidavitAutomation() {
                <option value="lieu">Affidavit in Lieu of Testimony</option>
                <option value="supporting">Supporting Affidavit</option>
                <option value="los">Loss of Support (Expert)</option>
+               <option value="mphela">Mphela & Associates Format</option>
             </select>
 
             <div className="flex gap-4 mb-3">
@@ -923,7 +933,7 @@ export default function AffidavitAutomation() {
             <button onClick={copyToClipboard} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all">
               <Copy className="w-4 h-4" /> Copy
             </button>
-            <button onClick={() => setShowFeedbackModal(true)} className="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold bg-amber-500 hover:bg-amber-600 text-slate-900 shadow-lg shadow-amber-500/20 transition-all">
+            <button onClick={() => handleFeedbackSubmit(true)} className="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold bg-amber-500 hover:bg-amber-600 text-slate-900 shadow-lg shadow-amber-500/20 transition-all">
               <Download className="w-4 h-4" /> Export Word
             </button>
           </div>
@@ -937,47 +947,6 @@ export default function AffidavitAutomation() {
           </div>
         </div>
       </div>
-
-      {/* GUARDIAN: INTERCEPT FEEDBACK MODAL */}
-      {showFeedbackModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 w-full max-w-md border border-slate-200 dark:border-slate-700 animate-in zoom-in-95 duration-200">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-full">
-                <FileSignature size={24} />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Quick Feedback</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Help us improve before you download.</p>
-              </div>
-            </div>
-            
-            <textarea 
-              value={feedbackText}
-              onChange={(e) => setFeedbackText(e.target.value)}
-              placeholder="Any issues? Missing clauses? Tell us what to improve..."
-              className="w-full h-32 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm outline-none focus:ring-2 focus:ring-amber-500 dark:text-white resize-none mb-4"
-            />
-            
-            <div className="flex gap-3">
-              <button 
-                onClick={() => handleFeedbackSubmit(true)}
-                className="flex-1 py-3 px-4 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
-              >
-                Skip & Download
-              </button>
-              <button 
-                onClick={() => handleFeedbackSubmit(false)}
-                disabled={!feedbackText.trim() || isSubmittingFeedback}
-                className="flex-1 py-3 px-4 rounded-xl text-sm font-bold text-white bg-amber-500 hover:bg-amber-600 shadow-lg shadow-amber-500/20 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isSubmittingFeedback ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                Submit & Download
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
     </div>
   );

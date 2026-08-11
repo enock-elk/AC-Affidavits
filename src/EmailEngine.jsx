@@ -142,17 +142,37 @@ export default function EmailEngine() {
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload)
       });
-      
-      const result = await res.json();
-      
-      if (result.status === 'success') {
-        setStatus({ msg: 'Draft created in your Gmail account!', type: 'success' });
+
+      let result;
+      try {
+        result = await res.json();
+      } catch {
+        setStatus({
+          msg: `Backend returned a non-JSON response (HTTP ${res.status}). Redeploy the Apps Script CREATE_DRAFT handler.`,
+          type: 'error'
+        });
+        return;
+      }
+
+      const ok = String(result?.status || '').toLowerCase() === 'success';
+      if (ok) {
+        setStatus({
+          msg: result.message || 'Draft created in your Gmail account!',
+          type: 'success'
+        });
       } else {
-        setStatus({ msg: 'Failed to push draft via GAS.', type: 'error' });
+        const detail = result?.message || `HTTP ${res.status}`;
+        setStatus({
+          msg: `Failed to push draft via GAS: ${detail}`,
+          type: 'error'
+        });
       }
     } catch (err) {
       console.error(err);
-      setStatus({ msg: 'Network error connecting to Backend.', type: 'error' });
+      setStatus({
+        msg: `Network error connecting to Backend: ${err?.message || 'unknown error'}`,
+        type: 'error'
+      });
     } finally {
       setIsPushing(false);
     }
@@ -261,14 +281,16 @@ export default function EmailEngine() {
         </div>
 
         {status.msg && (
-          <div className="absolute top-20 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-top-4 fade-in duration-300">
-            <div className={`px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 text-sm font-bold border ${
+          <div className="absolute top-20 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-top-4 fade-in duration-300 max-w-[min(90%,42rem)] px-4">
+            <div className={`px-6 py-3 rounded-2xl shadow-2xl flex items-start gap-2 text-sm font-bold border ${
               status.type === 'success' ? 'bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-100 border-emerald-200 dark:border-emerald-800' :
               status.type === 'error' ? 'bg-rose-100 dark:bg-rose-900 text-rose-800 dark:text-rose-100 border-rose-200 dark:border-rose-800' :
               'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100 border-blue-200 dark:border-blue-800'
             }`}>
-              {status.type === 'success' ? <CheckCircle2 size={18} /> : status.type === 'error' ? <AlertCircle size={18} /> : <RefreshCw size={18} className="animate-spin" />}
-              {status.msg}
+              <span className="shrink-0 mt-0.5">
+                {status.type === 'success' ? <CheckCircle2 size={18} /> : status.type === 'error' ? <AlertCircle size={18} /> : <RefreshCw size={18} className="animate-spin" />}
+              </span>
+              <span className="leading-snug">{status.msg}</span>
             </div>
           </div>
         )}
