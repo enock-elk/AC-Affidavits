@@ -21,10 +21,43 @@ import AffidavitAutomation from './AffidavitAutomation';
 // MAIN APP SHELL
 // ============================================================================
 
+const SESSION_KEY = 'currentUser';
+const REMEMBER_KEY = 'ac_remembered_user';
+const REMEMBER_MS = 365 * 24 * 60 * 60 * 1000; // 1 year
+
+const loadRememberedName = () => {
+  try {
+    const raw = localStorage.getItem(REMEMBER_KEY);
+    if (raw) {
+      const data = JSON.parse(raw);
+      if (data?.name && (!data.expiresAt || Date.now() <= data.expiresAt)) {
+        return String(data.name).trim();
+      }
+      localStorage.removeItem(REMEMBER_KEY);
+    }
+  } catch {
+    localStorage.removeItem(REMEMBER_KEY);
+  }
+  // Migrate older sessions that only stored currentUser
+  return (localStorage.getItem(SESSION_KEY) || '').trim();
+};
+
+const persistUserName = (name) => {
+  const trimmed = name.trim();
+  localStorage.setItem(SESSION_KEY, trimmed);
+  localStorage.setItem(REMEMBER_KEY, JSON.stringify({
+    name: trimmed,
+    expiresAt: Date.now() + REMEMBER_MS
+  }));
+};
+
 export default function App() {
-  // GUARDIAN: Check if user was already logged in
-  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('currentUser'));
-  const [userName, setUserName] = useState('');
+  const rememberedName = loadRememberedName();
+  // Active session only — remembered name is used to prefill after logout
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem(SESSION_KEY));
+  const [userName, setUserName] = useState(
+    () => localStorage.getItem(SESSION_KEY) || rememberedName || ''
+  );
   const [currentRoute, setCurrentRoute] = useState('affidavits'); 
   const [darkMode, setDarkMode] = useState(false);
 
@@ -41,17 +74,26 @@ export default function App() {
     }
   }, [darkMode]);
 
+  // Refresh the 1-year remember window while the user stays signed in
+  useEffect(() => {
+    const active = localStorage.getItem(SESSION_KEY);
+    if (isAuthenticated && active) {
+      persistUserName(active);
+    }
+  }, [isAuthenticated]);
+
   const handleLogin = (e) => {
     e.preventDefault();
     if (userName.trim().length < 2) return;
-    localStorage.setItem('currentUser', userName.trim());
+    persistUserName(userName);
     setIsAuthenticated(true);
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('currentUser');
+    // End the active session, but keep the remembered name for easy return
+    localStorage.removeItem(SESSION_KEY);
     setIsAuthenticated(false);
-    setUserName('');
+    setUserName(loadRememberedName());
     setCurrentRoute('affidavits');
   };
 
@@ -67,6 +109,11 @@ export default function App() {
           <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">Command Center</h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm mb-8">
             Secure workspace. Please enter your full name to access unified tools and maintain an audit trail.
+            {userName ? (
+              <span className="block mt-2 text-xs text-emerald-600 dark:text-emerald-400">
+                Welcome back — your name is remembered on this device.
+              </span>
+            ) : null}
           </p>
           <form onSubmit={handleLogin} className="space-y-4">
             <input 
@@ -75,6 +122,7 @@ export default function App() {
               value={userName}
               onChange={(e) => setUserName(e.target.value)}
               required
+              autoComplete="name"
               className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all dark:text-white"
             />
             <button 

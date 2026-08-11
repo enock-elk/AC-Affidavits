@@ -28,6 +28,26 @@ const FALLBACK_DB = [
   { id: 'dev2', firm: 'Hirschowitz Flionis (DEV FALLBACK)', attorney: 'Partner', rules: { quals: 'Short', linkNo: true, cover: false, obo: false, preSign: false } }
 ];
 
+// Document Type labels — keep in sync with the Document Type dropdown
+const DOC_TYPE_LABELS = {
+  expert: 'Expert Affidavit (Standard)',
+  sworn: 'Sworn Affidavit',
+  confirmatory: 'Expert Confirmatory Affidavit',
+  lieu: 'Affidavit in Lieu of Testimony',
+  supporting: 'Supporting Affidavit',
+  los: 'Loss of Support (Expert)',
+  mphela: 'Mphela & Associates Format'
+};
+
+const getAffidavitDisplayName = (docCategory, plaintiff) => {
+  const typeLabel = DOC_TYPE_LABELS[docCategory] || 'Expert Affidavit';
+  const claimant = (plaintiff || '').trim() || 'Draft';
+  return `${typeLabel} by Namir (Actuary) - ${claimant}`;
+};
+
+const toSafeFileName = (name) =>
+  name.replace(/[<>:"/\\|?*\u0000-\u001f]/g, '').replace(/\s+/g, ' ').trim();
+
 // GUARDIAN: Helper to auto-generate the ordinal legal date
 const getDefaultDate = () => {
   const d = new Date();
@@ -226,7 +246,8 @@ export default function AffidavitAutomation() {
   // --- 3. EXPORT HELPERS ---
   const copyToClipboard = async () => {
     const content = document.getElementById('doc-preview').innerHTML;
-    const preHtml = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><style>body { font-family: Arial, sans-serif; font-size: 12pt; }</style></head><body>`;
+    const displayName = getAffidavitDisplayName(docCategory, form.plaintiff);
+    const preHtml = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>${displayName}</title><style>body { font-family: Arial, sans-serif; font-size: 12pt; }</style></head><body>`;
     const postHtml = `</body></html>`;
     const html = preHtml + content + postHtml;
 
@@ -253,8 +274,9 @@ export default function AffidavitAutomation() {
 
   const exportToWord = () => {
     const content = document.getElementById('doc-preview').innerHTML;
+    const displayName = getAffidavitDisplayName(docCategory, form.plaintiff);
     // Add strict Arial 12pt fallback to Word envelope
-    const preHtml = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Affidavit</title><style>body { font-family: Arial, sans-serif; font-size: 12pt; }</style></head><body>`;
+    const preHtml = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>${displayName}</title><style>body { font-family: Arial, sans-serif; font-size: 12pt; }</style></head><body>`;
     const postHtml = `</body></html>`;
     const html = preHtml + content + postHtml;
 
@@ -262,7 +284,7 @@ export default function AffidavitAutomation() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Affidavit_${form.plaintiff.replace(/\s+/g, '_') || 'Draft'}.doc`;
+    a.download = `${toSafeFileName(displayName)}.doc`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -427,12 +449,17 @@ export default function AffidavitAutomation() {
        );
     } else if (docCategory === 'mphela') {
        return (
-         <>
-          <p style={{ marginBottom: '15px', textAlign: 'justify' }}>I am an Actuary and have compiled the {reportType} dated {reportDate} in the action of {subjectName} for the Plaintiff's Attorney, Mphela &amp; Associates Attorneys Inc.</p>
-          <p style={{ marginBottom: '15px', textAlign: 'justify' }}>I confirm the {reportType} to be true and correct.</p>
-          <p style={{ marginBottom: '15px', textAlign: 'justify' }}>I am a Fellow of the Actuarial Society of South Africa, RSP181/2023.</p>
-          <p style={{ marginBottom: '15px', textAlign: 'justify' }}>The {reportType} dated {reportDate} relating to the Plaintiff's claim against the Road Accident Fund (RAF) was prepared on the data, assumptions and methodology as detailed, and it constitutes my expert opinion.</p>
-         </>
+         <ol style={{ listStyleType: 'decimal', paddingLeft: '40px', margin: '0 0 15px 0', textAlign: 'justify' }}>
+           <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>
+             I am an Actuary and have compiled the {reportType} dated {reportDate} in the action of {subjectName} for the Plaintiff's Attorney, Mphela &amp; Associates Attorneys Inc. I confirm the {reportType} to be true and correct.
+           </li>
+           <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>
+             I am a Fellow of the Actuarial Society of South Africa, RSP181/2023.
+           </li>
+           <li style={{ marginBottom: '15px', paddingLeft: '10px' }}>
+             The {reportType} dated {reportDate} relating to the Plaintiff's claim against the Road Accident Fund (RAF) was prepared on the data, assumptions and methodology as detailed, and it constitutes my expert opinion.
+           </li>
+         </ol>
        );
     }
   }, [form, rules, activeFirm, complexity, docCategory, isRecalc, calcAmount, reportSubject]);
